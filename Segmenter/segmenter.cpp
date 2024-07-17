@@ -24,9 +24,9 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
     uint32_t totalSegments = (bits.size() + maxLenLineInSegment - 1) / maxLenLineInSegment;
 
     //DEBUG
-    // std::cout << "Всего бит: " << bits.size()
-    // << "\nОбщее количество сегментов: " << totalSegments
-    // << "\nМаксимальное количество полезных бит в сегменте: " << maxLenLineInSegment << std::endl;
+    std::cout << "Всего бит: " << bits.size()
+    << "\nОбщее количество сегментов: " << totalSegments
+    << "\nМаксимальное количество полезных бит в сегменте: " << maxLenLineInSegment << std::endl;
 
     std::random_device rd;
     std::mt19937 gen(rd());

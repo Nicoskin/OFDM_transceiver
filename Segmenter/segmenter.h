@@ -7,7 +7,7 @@
 class Segmenter {
 public:
     Segmenter(
-            uint32_t maxLenLine = 128,
+            uint32_t maxLenLine = (128-55-6-1)*5*2, // (N_fft - GB - Pilots - 1) * N_OFDM_sumbols * QAM_mod
             uint32_t segmentNumBits = 16,
             //uint32_t totalSegmentBits = 16, 
             uint32_t usefulBits = 32,

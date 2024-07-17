@@ -5,18 +5,21 @@
 #include <memory>
 #include <vector>
 
-using namespace std::complex_literals;  // For the complex number literals
+namespace {
+    using cd = std::complex<double>;
+    using namespace std::complex_literals;  
+}
 
-static const std::vector<std::complex<double>> BPSK_MAP = {1.0 + 0.0i, -1.0 + 0.0i};
-//static const std::vector<std::complex<double>> BPSK_MAP = {1.0 + 1.0i, -1.0 - 1.0i}; // 11 -1-1
-static const std::vector<std::complex<double>> QPSK_MAP = {1.0 + 1.0i, 1.0 - 1.0i, -1.0 + 1.0i, -1.0 - 1.0i};
-static const std::vector<std::complex<double>> QAM16_MAP = {
+static const std::vector<cd> BPSK_MAP = {1.0 + 0.0i, -1.0 + 0.0i};
+//static const std::vector<cd> BPSK_MAP = {1.0 + 1.0i, -1.0 - 1.0i};         // +1+1 -1-1
+static const std::vector<cd> QPSK_MAP = {1.0 + 1.0i, 1.0 - 1.0i, -1.0 + 1.0i, -1.0 - 1.0i};
+static const std::vector<cd> QAM16_MAP = {
     1.0 + 1.0i, 1.0 + 3.0i, 3.0 + 1.0i, 3.0 + 3.0i,
     1.0 - 1.0i, 1.0 - 3.0i, 3.0 - 1.0i, 3.0 - 3.0i,
     -1.0 + 1.0i, -1.0 + 3.0i, -3.0 + 1.0i, -3.0 + 3.0i,
     -1.0 - 1.0i, -1.0 - 3.0i, -3.0 - 1.0i, -3.0 - 3.0i
 };
-static const std::vector<std::complex<double>> QAM64_MAP = {
+static const std::vector<cd> QAM64_MAP = {
     1.0 + 1.0i, 1.0 + 3.0i, 1.0 + 5.0i, 1.0 + 7.0i,
     3.0 + 1.0i, 3.0 + 3.0i, 3.0 + 5.0i, 3.0 + 7.0i,
     5.0 + 1.0i, 5.0 + 3.0i, 5.0 + 5.0i, 5.0 + 7.0i,
@@ -38,7 +41,7 @@ static const std::vector<std::complex<double>> QAM64_MAP = {
 Modulation::Modulation(ModulationType modulationType, size_t length)
     : modulation(modulationType), symbols(length) {}
 
-void Modulation::setSymbols(const std::vector<std::complex<double>>& symbolMap, const std::vector<int>& bits, size_t symbolSize, double normalizationFactor) {
+void Modulation::setSymbols(const std::vector<cd>& symbolMap, const std::vector<int>& bits, size_t symbolSize, double normalizationFactor) {
     for (size_t i = 0; i < symbols.size(); ++i) {
         int index = 0;
         for (size_t j = 0; j < symbolSize; ++j) {
@@ -48,10 +51,10 @@ void Modulation::setSymbols(const std::vector<std::complex<double>>& symbolMap, 
     }
 }
 
-std::vector<std::vector<std::complex<double>>> modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulation) {
+std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulation) {
     size_t symbolSize = 0;
     double normalizationFactor = 1.0;
-    const std::vector<std::complex<double>>* symbolMap;
+    const std::vector<cd>* symbolMap;
 
     switch (modulation) {
         case BPSK:
@@ -83,13 +86,11 @@ std::vector<std::vector<std::complex<double>>> modulate(const std::vector<std::v
             return {};
     }
 
-    std::vector<std::vector<std::complex<double>>> result;
+    std::vector<std::vector<cd>> result;
 
     for (const auto& bitVec : bits) {
-        // Copy bits to a vector<int>
         std::vector<int> intBits(bitVec.begin(), bitVec.end());
         
-        // Add padding if necessary
         while (intBits.size() % symbolSize != 0) {
             intBits.push_back(0);
         }
