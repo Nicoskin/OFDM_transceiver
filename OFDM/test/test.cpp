@@ -2,6 +2,8 @@
 #include "../fft/fft.h"
 #include <iostream>
 
+// g++ --std c++20 test.cpp ../ofdm_mod.cpp ../fft/fft.cpp -o test && ./test
+
 int main() {
     // Параметры OFDM
     int N_FFT = 128;
@@ -19,8 +21,11 @@ int main() {
     // Генерация PSS
     //std::vector<std::complex<double>> PSS = ofdm.generateZadoffChu(63, 25, true);
 
+    auto PSS = ofdm.ZadoffChu(true);
+    auto mapped_pss = ofdm.mapPSS(PSS);
+
     // Обработка входных данных
-    std::vector<std::complex<double>> output = ofdm.process(input_matrix, ofdm.ZadoffChu(true));
+    std::vector<std::complex<double>> output = ofdm.process(input_matrix);
 
     // Печать выходных данных
     for (const auto &val : output) {
