@@ -21,13 +21,13 @@ bool check_pss(vector <double> conv)
 			flag++;
 			//cout << "true" << endl;
 
-			return true;
+			//return true;
 		}
 
 	}
 	//cout << flag << endl;
-	if(flag == 12){
-		//return true;
+	if(flag > 120){
+		return true;
 	}
 }
 
@@ -38,7 +38,7 @@ int main (int argc, char **argv)
 	struct iio_device *rx = context_rx(argc,argv);
 
 
-	rxbuf = iio_device_create_buffer(rx, 30000, false);
+	rxbuf = iio_device_create_buffer(rx, 16384, false);
 	//cout << "rxbuf " << rxbuf << endl;
 	if (!rxbuf) {
 		perror("Could not create RX buffer");
@@ -63,7 +63,7 @@ int main (int argc, char **argv)
 
 	printf("* Starting IO streaming (press CTRL+C to cancel)\n");
 
-	ofstream file("/home/ivan/Desktop/Work_dir/1440/SDR_TX_RX/src/resurrs/rx_file.txt", ios::binary);
+	ofstream file("/home/ivan/Desktop/Work_dir/1440/OFDM_transceiver/src/resurrs/rx_file.txt", ios::binary);
 
 	ifstream real_file1("/home/ivan/Desktop/Work_dir/Yadro/ofdm/pss_real.txt");
 	if (!real_file1.is_open()) {

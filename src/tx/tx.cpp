@@ -66,7 +66,7 @@ int main (int argc, char **argv)
       	//printf("%lf + %lfi\n", real_data[i], imag_data[i]);
    	}	
     int k  = 0;
-    while(k < 100){
+    while(k < 2){
         k++;
         //stop = true;
         ssize_t nbytes_tx;
@@ -83,7 +83,7 @@ int main (int argc, char **argv)
         auto start = std::chrono::high_resolution_clock::now();
     
 		int i = 0;
-		for (p_dat = (char *)iio_buffer_first(txbuf, tx0_i); p_dat < p_end; p_dat += p_inc) {
+		for (p_dat = (char *)iio_buffer_first(txbuf, tx0_q); p_dat < p_end; p_dat += p_inc) {
 			
 			// Example: fill with zeros
 			// 12-bit sample needs to be MSB aligned so shift by 4
@@ -95,10 +95,10 @@ int main (int argc, char **argv)
 			//printf("i_tx = %d\n", ((int16_t*)p_dat)[0]);
 			//printf("q_tx = %d\n", ((int16_t*)p_dat)[1]);
 			i++;
-            
+            usleep(10);
 	
 		}
-        //usleep(1000);
+        usleep(200000);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
