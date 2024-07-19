@@ -26,7 +26,7 @@ bool check_pss(vector <double> conv)
 
 	}
 	//cout << flag << endl;
-	if(flag > 120){
+	if(flag == 12){
 		return true;
 	}
 }
@@ -156,11 +156,11 @@ int main (int argc, char **argv)
 			const int16_t q = ((int16_t*)p_dat)[1]; // Imag (Q)
 			((int16_t*)p_dat)[0] = q;
 			((int16_t*)p_dat)[1] = i;
-			rx_data.push_back(complex<double>(i, q));
-			rx_buf.push_back(complex<double>(i, q));
+			//rx_data.push_back(complex<double>(i, q));
+			//rx_buf.push_back(complex<double>(i, q));
 
-			fprintf(real_file_rx, "%d\n", i);
-			fprintf(imag_file_rx, "%d\n", q);
+			//fprintf(real_file_rx, "%d\n", i);
+			//fprintf(imag_file_rx, "%d\n", q);
 			n++;
 
 
