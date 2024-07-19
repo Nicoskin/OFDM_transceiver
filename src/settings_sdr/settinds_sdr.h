@@ -151,13 +151,13 @@ bool cfg_ad9361_streaming_ch(struct stream_cfg *cfg, enum iodev type, int chid)
 	wr_ch_str(chn, "rf_port_select",     cfg->rfport);
 	wr_ch_lli(chn, "rf_bandwidth",       cfg->bw_hz);
 	wr_ch_lli(chn, "sampling_frequency", cfg->fs_hz);
-	iio_channel_attr_write(chn, "gain_control_mode", "manual");
+	iio_channel_attr_write(chn, "gain_control_mode", "fast_attack");
 	if (type == RX){   
-    	wr_ch_lli(chn, "hardwaregain", 20); // RX gain
+    	//wr_ch_lli(chn, "hardwaregain", 10); // RX gain
 	}
 
 	else {
-		wr_ch_lli(chn, "hardwaregain", 0);
+		//wr_ch_lli(chn, "hardwaregain", -10);
 	}
 
 	// Configure LO channel

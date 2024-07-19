@@ -66,7 +66,7 @@ int main (int argc, char **argv)
       	//printf("%lf + %lfi\n", real_data[i], imag_data[i]);
    	}	
     int k  = 0;
-    while(k < 2){
+    while(k < 100){
         k++;
         //stop = true;
         ssize_t nbytes_tx;
@@ -95,10 +95,10 @@ int main (int argc, char **argv)
 			//printf("i_tx = %d\n", ((int16_t*)p_dat)[0]);
 			//printf("q_tx = %d\n", ((int16_t*)p_dat)[1]);
 			i++;
-            usleep(10);
+            //usleep(10);
 	
 		}
-        usleep(200000);
+        usleep(2000);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
