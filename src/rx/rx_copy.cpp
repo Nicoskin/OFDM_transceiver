@@ -94,14 +94,14 @@ int main (int argc, char **argv)
 
 
 	// файл с real частью
-    FILE *real_file = fopen("/home/ivan/Desktop/Work_dir/Yadro/ofdm/real_part.txt", "r");
+    FILE *real_file = fopen("../resurrs/real_part.txt", "r");
     if (real_file == NULL) {
         perror("Ошибка открытия файла с реальной частью");
         return EXIT_FAILURE;
     }
 
     // файл с мнимой частью
-    FILE *imag_file = fopen("/home/ivan/Desktop/Work_dir/Yadro/ofdm/imag_part.txt", "r");
+    FILE *imag_file = fopen("../resurrs/imag_part.txt", "r");
     if (imag_file == NULL) {
         perror("Ошибка открытия файла с мнимой частью");
         return EXIT_FAILURE;
@@ -115,7 +115,7 @@ int main (int argc, char **argv)
 	int count = n;
 	printf("n = %d\n", count);
 
-	ofstream file("/home/ivan/Desktop/Work_dir/1440/OFDM_transceiver/src/resurrs/rx_file_copy.txt", ios::binary); 
+	ofstream file("../resurrs/rx_file_copy.txt", ios::binary); 
 
 
 
@@ -139,7 +139,7 @@ int main (int argc, char **argv)
 	int k = 0;
 	vector <complex<double>> rx_data;
 	if (1){
-	while (k<5)
+	while (k<10)
 	{
 		k++;
 		ssize_t nbytes_rx, nbytes_tx;

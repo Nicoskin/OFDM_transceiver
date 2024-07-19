@@ -63,15 +63,15 @@ int main (int argc, char **argv)
 
 	printf("* Starting IO streaming (press CTRL+C to cancel)\n");
 
-	ofstream file("/home/ivan/Desktop/Work_dir/1440/OFDM_transceiver/src/resurrs/rx_file.txt", ios::binary);
+	ofstream file("src/resurrs/rx_file.txt", ios::binary);
 
-	ifstream real_file1("/home/ivan/Desktop/Work_dir/Yadro/ofdm/pss_real.txt");
+	ifstream real_file1("src/resurrs/pss_real.txt");
 	if (!real_file1.is_open()) {
 		std::cerr << "Не удалось открыть файл1" << std::endl;
 		return 1;
 	}
 	// файл с мнимой частью
-	ifstream imag_file1("/home/ivan/Desktop/Work_dir/Yadro/ofdm/pss_imag.txt");
+	ifstream imag_file1("src/resurrs/pss_imag.txt");
 	if (!imag_file1.is_open()) {
 		std::cerr << "Не удалось открыть файл1" << std::endl;
 		return 1;

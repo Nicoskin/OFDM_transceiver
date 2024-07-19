@@ -28,14 +28,14 @@ int main (int argc, char **argv)
 
 
 	// файл с real частью
-    FILE *real_file = fopen("/home/ivan/Desktop/Work_dir/Yadro/ofdm/real_part.txt", "r");
+    FILE *real_file = fopen("src/resurrs/real_part.txt", "r");
     if (real_file == NULL) {
         perror("Ошибка открытия файла с реальной частью");
         return EXIT_FAILURE;
     }
 
     // файл с мнимой частью
-    FILE *imag_file = fopen("/home/ivan/Desktop/Work_dir/Yadro/ofdm/imag_part.txt", "r");
+    FILE *imag_file = fopen("src/resurrs/real_part.txt", "r");
     if (imag_file == NULL) {
         perror("Ошибка открытия файла с мнимой частью");
         return EXIT_FAILURE;
