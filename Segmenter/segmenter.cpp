@@ -24,9 +24,9 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
     uint32_t totalSegments = (bits.size() + maxLenLineInSegment - 1) / maxLenLineInSegment;
 
     //DEBUG
-    std::cout << "Всего бит: " << bits.size()
-    << "\nОбщее количество сегментов: " << totalSegments
-    << "\nМаксимальное количество полезных бит в сегменте: " << maxLenLineInSegment << std::endl;
+    // std::cout << "Всего бит: " << bits.size()
+    // << "\nОбщее количество сегментов: " << totalSegments
+    // << "\nМаксимальное количество полезных бит в сегменте: " << maxLenLineInSegment << std::endl;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -94,4 +94,25 @@ uint64_t Segmenter::computeCRC(const std::vector<uint8_t>& data) {
     }
 
     return crc & ((1ULL << crcBits) - 1); // Возвращаем CRC, обрезанный до нужного количества бит
+}
+
+// Функция скрамблинга
+// Скрамблинг симметричен, поэтому та же функция может быть использована
+std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vector<uint8_t>>& data) {
+
+    std::vector<std::vector<uint8_t>> scrambledData = data; // Копируем входные данные
+    
+    uint64_t lfsr = 0xACE1; // Пример начального значения LFSR (может быть любое ненулевое значение)
+
+    for (auto& row : scrambledData) {
+        for (auto& bit : row) {
+            uint8_t lfsr_bit = (lfsr >> 0) & 1; // Извлекаем наименее значимый бит (LSB) из текущего значения LFSR
+            lfsr = (lfsr >> 1) | (lfsr_bit << 15); // Сдвигаем LFSR вправо и вставляем извлеченный бит на 16-ю позицию
+            lfsr ^= (-lfsr_bit) & 0xB400u; // XOR-им LFSR с полиномом, если LSB равен 1 (Таппы: 16 14 13 11)
+
+            bit ^= lfsr_bit; // XOR-им входной бит с сгенерированным псевдослучайным битом
+        }
+    }
+
+    return scrambledData; // Возвращаем скрамблированные данные
 }
