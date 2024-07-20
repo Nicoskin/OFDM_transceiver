@@ -4,6 +4,8 @@
 #include <complex>
 #include <algorithm>
 
+#include <iostream>
+
 namespace {
     using cd = std::complex<double>;
 }
@@ -11,6 +13,7 @@ namespace {
 OFDM::OFDM(int N_FFT, int G_subcar, int N_PILOTS, int CP_LEN)
     : N_FFT(N_FFT), G_subcar(G_subcar), N_PILOTS(N_PILOTS), CP_LEN(CP_LEN) {
     N_active_subcarriers = N_FFT - G_subcar - N_PILOTS;
+    N_active_subcar_for_pss = N_FFT - G_subcar;
 }
 
 std::vector<cd> OFDM::process(const std::vector<std::vector<cd>> &input_matrix) {
@@ -21,15 +24,15 @@ std::vector<cd> OFDM::process(const std::vector<std::vector<cd>> &input_matrix) 
         auto PSS = ZadoffChu(true);
         auto mapped_pss = mapPSS(PSS);
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());
-
-        // Каждый OFDM символ
+        
+        // Каждый OFDM слот
         for (size_t i = 0; i < input_symbols.size(); i += N_active_subcarriers * 5) {
             for (int k = 0; k < 5; ++k) {
                 // 66 активных поднесущих 
-                std::vector<cd> ofdm_symbol(input_symbols.begin() + i + k * N_active_subcarriers,
-                                            input_symbols.begin() + i + (k + 1) * N_active_subcarriers);
+                std::vector<cd> ofdm_symbol(input_symbols.begin() + i + k * (N_active_subcarriers-1),
+                                            input_symbols.begin() + i + (k + 1) * (N_active_subcarriers-1));
                 ofdm_symbol = mapToSubcarriers(ofdm_symbol);
-
+        
                 // FFTShift
                 ofdm_symbol = fftshift(ofdm_symbol);
 
@@ -44,6 +47,7 @@ std::vector<cd> OFDM::process(const std::vector<std::vector<cd>> &input_matrix) 
                 output.insert(output.end(), cp.begin(), cp.end());
             }
         }
+
     }
 
     // Умножение на 2^10
@@ -55,46 +59,47 @@ std::vector<cd> OFDM::process(const std::vector<std::vector<cd>> &input_matrix) 
 }
 
 std::vector<cd> OFDM::mapToSubcarriers(const std::vector<cd> &input) {
-    std::vector<cd> subcarriers(N_FFT, 0);
 
+    std::vector<cd> subcarriers(N_FFT, 0);
     int left_active = (N_FFT - N_active_subcarriers) / 2;
+    int middle_index = N_FFT / 2;
     int data_index = 0;
     int pilot_index = 0;
-    int pilot_interval = N_active_subcarriers / N_PILOTS;
+    int pilot_interval = N_active_subcarriers / (N_PILOTS-1);
+    cd pilot_value(1, 1);  
+    // Индексы пилотов - 30 43 56 69 82 95  
 
     for (int i = 0; i < N_active_subcarriers; ++i) {
-        // Вставляем пилоты на заданных интервалах
-        if (pilot_index < N_PILOTS && i % pilot_interval == 0) {
-            subcarriers[left_active + i] = input[N_active_subcarriers + pilot_index];
+        int current_index = left_active + i;
+
+        if (current_index == middle_index) {
+            subcarriers[current_index] = cd(0.0, 0.0);
+        }
+
+        else if (pilot_index < N_PILOTS && i % pilot_interval == 0) {
+            subcarriers[current_index] = pilot_value;
             pilot_index++;
         } else {
-            // Вставляем данные
-            subcarriers[left_active + i] = input[data_index];
+            subcarriers[current_index] = input[data_index];
             data_index++;
         }
     }
-
     return subcarriers;
 }
 // Маппинг PSS к поднесущим
 std::vector<cd> OFDM::mapPSS(const std::vector<cd> &pss) {
     std::vector<cd> subcarriers(N_FFT, 0);
 
-    int left_active = (N_FFT - N_active_subcarriers) / 2;
+    int left_active = (N_FFT - 63) / 2; //+ (N_FFT - N_active_subcar_for_pss) - 31 ;
     int right_active = left_active + N_active_subcarriers;
+    int max_i = left_active - 31;
 
-    // Вставляем первую часть PSS
-    for (int i = 0; i < 31; ++i) {
+    for (int i = 0; i < 63; ++i) {
         subcarriers[left_active + i] = pss[i];
+        if (i==32) subcarriers[left_active + i] = 0;
     }
-
-    // Вставляем вторую часть PSS
-    for (int i = 0; i < 31; ++i) {
-        subcarriers[right_active - 31 + i] = pss[31 + i];
-    }
-
     // FFTShift
-    //subcarriers = fftshift(subcarriers);
+    subcarriers = fftshift(subcarriers);
 
     // IFFT
     subcarriers = ifft(subcarriers);

@@ -19,6 +19,7 @@ private:
     int N_PILOTS;
     int CP_LEN;
     int N_active_subcarriers;
+    int N_active_subcar_for_pss;
 
     std::vector<cd> mapToSubcarriers(const std::vector<cd> &input);
     
