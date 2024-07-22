@@ -3,15 +3,15 @@
 
 #include <vector>
 #include <cstdint>
+#include "../base_define.h"
 
 class Segmenter {
 public:
     Segmenter(
-            uint32_t maxLenLine = (128-55-6-1)*5*2, // (N_fft - GB - Pilots - 1) * N_OFDM_symbols * QAM_mod
-            uint32_t segmentNumBits = 10,
-            //uint32_t totalSegmentBits = 16, 
-            uint32_t usefulBits = 32,
-            uint32_t crcBits = 16
+            uint32_t maxLenLine = MAX_LEN_LINE,
+            uint32_t segmentNumBits = SEGMENT_NUM_BITS,
+            uint32_t usefulBits = USEFUL_BITS,
+            uint32_t crcBits = CRC_BITS
             );
 
     std::vector<std::vector<uint8_t>> segment(const std::vector<uint8_t>& bits);
@@ -20,7 +20,6 @@ public:
 private:
     uint32_t maxLenLine;
     uint32_t segmentNumBits;
-    //uint32_t totalSegmentBits;
     uint32_t usefulBits;
     uint32_t crcBits;
 

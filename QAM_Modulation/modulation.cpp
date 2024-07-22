@@ -38,8 +38,7 @@ static const std::vector<cd> QAM64_MAP = {
     -7.0 - 1.0i, -7.0 - 3.0i, -7.0 - 5.0i, -7.0 - 7.0i
 };
 
-Modulation::Modulation(ModulationType modulationType, size_t length)
-    : modulation(modulationType), symbols(length) {}
+Modulation::Modulation(size_t length) : symbols(length) {}
 
 void Modulation::setSymbols(const std::vector<cd>& symbolMap, const std::vector<int>& bits, size_t symbolSize, double normalizationFactor) {
     for (size_t i = 0; i < symbols.size(); ++i) {
@@ -51,31 +50,31 @@ void Modulation::setSymbols(const std::vector<cd>& symbolMap, const std::vector<
     }
 }
 
-std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulation) {
+std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& bits, int modulation) {
     size_t symbolSize = 0;
     double normalizationFactor = 1.0;
     const std::vector<cd>* symbolMap;
 
     switch (modulation) {
-        case BPSK:
+        case 1:
             symbolSize = 1;
             normalizationFactor = 1.0;
             symbolMap = &BPSK_MAP;
             break;
 
-        case QPSK:
+        case 2:
             symbolSize = 2;
             normalizationFactor = 2.0;
             symbolMap = &QPSK_MAP;
             break;
 
-        case QAM16:
+        case 4:
             symbolSize = 4;
             normalizationFactor = 10.0;
             symbolMap = &QAM16_MAP;
             break;
 
-        case QAM64:
+        case 6:
             symbolSize = 6;
             normalizationFactor = 42.0;
             symbolMap = &QAM64_MAP;
@@ -96,7 +95,7 @@ std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& b
         }
 
         size_t numSymbols = intBits.size() / symbolSize;
-        Modulation mod(modulation, numSymbols);
+        Modulation mod(numSymbols);
         mod.setSymbols(*symbolMap, intBits, symbolSize, normalizationFactor);
 
         result.push_back(mod.symbols);

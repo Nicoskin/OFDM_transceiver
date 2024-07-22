@@ -9,10 +9,9 @@
 Segmenter::Segmenter(
     uint32_t maxLenLine,
     uint32_t segmentNumBits,
-    //uint32_t totalSegmentBits, 
     uint32_t usefulBits,
     uint32_t crcBits)
-    : maxLenLine(maxLenLine), segmentNumBits(segmentNumBits), //totalSegmentBits(totalSegmentBits),
+    : maxLenLine(maxLenLine), segmentNumBits(segmentNumBits),
       usefulBits(usefulBits), crcBits(crcBits) {}
 
 // Функция разбиения вектора бит на сегменты
@@ -20,7 +19,7 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
     std::vector<std::vector<uint8_t>> segments;
     setlocale(LC_ALL, "Russian");
 
-    uint32_t maxLenLineInSegment = maxLenLine - segmentNumBits /*- totalSegmentBits*/ - usefulBits - crcBits;
+    uint32_t maxLenLineInSegment = maxLenLine - segmentNumBits - usefulBits - crcBits;
     uint32_t totalSegments = (bits.size() + maxLenLineInSegment - 1) / maxLenLineInSegment;
 
     //DEBUG
@@ -39,11 +38,6 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
         for (int j = segmentNumBits - 1; j >= 0; --j) {
             segment.push_back((i >> j) & 1);
         }
-
-        // Общее количество сегментов
-        // for (int j = totalSegmentBits - 1; j >= 0; --j) {
-        //     segment.push_back((totalSegments >> j) & 1);
-        // }
 
         // Длина полезных бит
         uint32_t usefulBitsLength = (i == totalSegments - 1) ? (bits.size() % maxLenLineInSegment) : maxLenLineInSegment;

@@ -10,14 +10,10 @@ namespace {
     using cd = std::complex<double>;
 }
 
-OFDM::OFDM(int N_FFT, int G_subcar, int N_PILOTS, int CP_LEN)
-    : N_FFT(N_FFT), G_subcar(G_subcar), N_PILOTS(N_PILOTS), CP_LEN(CP_LEN) {
-    N_active_subcarriers = N_FFT - G_subcar - N_PILOTS;
-    N_active_subcar_for_pss = N_FFT - G_subcar;
-}
-
 std::vector<cd> OFDM::process(const std::vector<std::vector<cd>> &input_matrix) {
     std::vector<cd> output;
+    N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS;
+    N_active_subcar_for_pss = N_FFT - G_SUBCAR;
 
     for (const auto &input_symbols : input_matrix) {
         // Маппинг и вставка PSS перед каждым слотом из 5 символов OFDM
@@ -26,13 +22,16 @@ std::vector<cd> OFDM::process(const std::vector<std::vector<cd>> &input_matrix) 
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());
         
         // Каждый OFDM слот
-        for (size_t i = 0; i < input_symbols.size(); i += N_active_subcarriers * 5) {
-            for (int k = 0; k < 5; ++k) {
+        for (size_t i = 0; i < input_symbols.size(); i += N_active_subcarriers * OFDM_SYM_IN_SLOT) {
+            for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
                 // 66 активных поднесущих 
                 std::vector<cd> ofdm_symbol(input_symbols.begin() + i + k * (N_active_subcarriers-1),
                                             input_symbols.begin() + i + (k + 1) * (N_active_subcarriers-1));
                 ofdm_symbol = mapToSubcarriers(ofdm_symbol);
-        
+                std::cout << "ofdm_symbol" << std::endl;
+                for (const auto &val : ofdm_symbol) {
+                    std::cout << val << ",\n";
+                }
                 // FFTShift
                 ofdm_symbol = fftshift(ofdm_symbol);
 
