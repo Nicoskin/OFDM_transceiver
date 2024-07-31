@@ -20,8 +20,8 @@ int main() {
 
         // Output number of bits and the bits themselves
         std::cout << "Number of bits: " << fileBits.size() << std::endl;
-        // std::cout << "Bits: ";
-        // printBits(fileBits);
+        std::cout << "Bits: ";
+        printBits(fileBits);
 
         // Convert bits back to file with metadata
         bitsToFileWithMetadata(outputDir, fileBits, fileName);

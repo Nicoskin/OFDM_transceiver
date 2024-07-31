@@ -16,6 +16,7 @@ public:
 
     std::vector<std::vector<uint8_t>> segment(const std::vector<uint8_t>& bits);
     std::vector<std::vector<uint8_t>> scramble(const std::vector<std::vector<uint8_t>>& data);
+    std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
 
 private:
     uint32_t maxLenLine;

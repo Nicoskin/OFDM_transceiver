@@ -90,6 +90,49 @@ uint64_t Segmenter::computeCRC(const std::vector<uint8_t>& data) {
     return crc & ((1ULL << crcBits) - 1); // Возвращаем CRC, обрезанный до нужного количества бит
 }
 
+// Функция проверки CRC
+std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& segments) {
+    std::vector<int> incorrectSegments;
+
+    for (size_t i = 0; i < segments.size(); ++i) {
+        const auto& segment = segments[i];
+
+        // Номер сегмента (первые segmentNumBits бит)
+        int segmentIndex = 0;
+        for (int j = 0; j < segmentNumBits; ++j) {
+            segmentIndex = (segmentIndex << 1) | segment[j];
+        }
+
+        // Длина полезных бит (следующие usefulBits бит)
+        int usefulBitsLength = 0;
+        for (int j = 0; j < usefulBits; ++j) {
+            usefulBitsLength = (usefulBitsLength << 1) | segment[segmentNumBits + j];
+        }
+
+        // Если последний сегмент, отсечь случайные биты
+        int dataSize = (i == segments.size() - 1) ? usefulBitsLength : (maxLenLine - segmentNumBits - usefulBits - crcBits);
+
+        // Полезные данные
+        std::vector<uint8_t> data(segment.begin(), segment.begin() + segmentNumBits + usefulBits + dataSize);
+
+        // Вычисление CRC
+        uint64_t computedCRC = computeCRC(data);
+
+        // Полученный CRC из кадра (последние crcBits бит)
+        uint64_t receivedCRC = 0;
+        for (int j = 0; j < crcBits; ++j) {
+            receivedCRC = (receivedCRC << 1) | segment[segmentNumBits + usefulBits + dataSize + j];
+        }
+
+        // Проверка CRC
+        if (computedCRC != receivedCRC) {
+            incorrectSegments.push_back(i);
+        }
+    }
+
+    return incorrectSegments;
+}
+
 // Функция скрамблинга
 // Скрамблинг симметричен, поэтому та же функция может быть использована
 std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vector<uint8_t>>& data) {
