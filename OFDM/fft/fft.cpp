@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <numbers>
 
+#include <iostream>
+
 namespace
 {
     using cd = std::complex<double>;
@@ -20,6 +22,13 @@ int reverse(int num, int lg_n) {
 std::vector<cd> fft(const std::vector<cd> &num) {
     std::vector<cd> fft_image{num};
     int n = num.size();
+
+    // Проверка, является ли n четной степенью двойки
+    if (n <= 0 || (n & (n - 1)) != 0) {
+        std::cerr << "Error: Size of input vector must be a positive power of 2." << std::endl;
+        return {};
+    }
+
     int lg_n = 0;
     while ((1 << lg_n) < n)
         lg_n++;

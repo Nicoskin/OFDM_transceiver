@@ -133,8 +133,8 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
     return incorrectSegments;
 }
 
-// Функция скрамблинга
-// Скрамблинг симметричен, поэтому та же функция может быть использована
+// Функция скремблирования
+// Скремблинг симметричен, поэтому та же функция может быть использована
 std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vector<uint8_t>>& data) {
 
     std::vector<std::vector<uint8_t>> scrambledData = data; // Копируем входные данные
