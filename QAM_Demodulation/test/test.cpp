@@ -14,7 +14,8 @@ namespace {
 
 // Функция для преобразования SNR в стандартное отклонение шума
 double snr_to_stddev(double snr) {
-    return std::sqrt(1.0 / (2.0 * std::pow(10.0, snr / 10.0)));
+    //return std::sqrt(1.0 / (2.0 * std::pow(10.0, snr / 10.0)));
+    return 0.707/snr;
 }
 
 std::vector<cd> add_noise_to_qpsk(const std::vector<std::vector<cd>>& qpsk_data, double snr, bool fixed_seed = false) {
@@ -42,6 +43,14 @@ std::vector<cd> add_noise_to_qpsk(const std::vector<std::vector<cd>>& qpsk_data,
 
 int main() {
     std::vector<std::vector<uint8_t>> bits = {{1, 1, 0, 1, 1, 1, 1, 0}}; 
+    std::cout << "Input Bits:\n";
+    for (const auto& bitVector : bits) {
+        for (const auto& bit : bitVector) {
+            std::cout << static_cast<int>(bit) << " ";  // Приводим к int для корректного вывода
+        }
+        std::cout << std::endl;  // Добавляем перенос строки для разделения векторов
+    }
+    std::cout << std::endl;
 
     auto qpsk_mod = modulate(bits, 2);
 
@@ -55,8 +64,8 @@ int main() {
 
 
     // Параметры SNR и флаг для фиксации сида
-    double snr = 10.0; // Пример SNR в dB
-    bool fixed_seed = true; // Установить в true для фиксированного сида
+    double snr = 5.0; // Пример SNR в dB
+    bool fixed_seed = false; // Установить в true для фиксированного сида
 
     // Добавляем шум к данным QPSK
     std::vector<cd> noisy_signal = add_noise_to_qpsk(qpsk_mod, snr, fixed_seed);
@@ -70,15 +79,22 @@ int main() {
 
     // Демодуляция сигнала
     QAMDemodulator QAMDemod(QPSK);
-    auto demod = QAMDemod.demodulate(noisy_signal);
+    auto softDecisions = QAMDemod.demodulate(noisy_signal);
 
     std::cout << "Demodulated Metrics:\n";
-    for (const auto& symbol : demod) {
+    for (const auto& symbol : softDecisions) {
         for (const auto& metric : symbol) {
             std::cout << metric << ", ";
         }
         std::cout << "\n";
     }
+
+    std::vector<int> out_bits = QAMDemod.softDecisionsToBits(softDecisions);
+    std::cout << "\nDemodulated Bits:\n";
+    for (const auto& bit : out_bits) {
+        std::cout << bit << " ";
+    }
+    std::cout << std::endl;
 
     return 0;
 }

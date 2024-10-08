@@ -5,6 +5,9 @@
 #include <complex>
 #include <cmath>
 
+#include <bitset>
+#include <map>
+
 enum ModulationScheme { BPSK, QPSK, QAM16, QAM64 };
 
 class QAMDemodulator {
@@ -12,6 +15,7 @@ public:
     QAMDemodulator(ModulationScheme modScheme);
 
     std::vector<std::vector<double>> demodulate(const std::vector<std::complex<double>>& receivedSignal);
+    std::vector<int> softDecisionsToBits(const std::vector<std::vector<double>>& softDecisions);
 
 private:
     ModulationScheme modScheme;

@@ -15,6 +15,12 @@ namespace {
 //     std::cout << val << ",\n";
 // }
 
+OFDM_mod::OFDM_mod(){
+    N_active_subcarriers = N_FFT - G_SUBCAR; // - N_PILOTS; 
+    generateIndices();  // Генерируем индексы данных и пилотов при инициализации
+};
+
+
 // OFDM модуляция
 // На вход матрица IQ символов, на выходе сэмплы для передачи
 std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_matrix) {

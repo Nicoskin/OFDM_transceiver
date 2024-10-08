@@ -8,12 +8,7 @@
 class OFDM_mod {
 public:
     using cd = std::complex<double>;
-
-    // Конструктор класса
-    OFDM_mod() {
-        N_active_subcarriers = N_FFT - G_SUBCAR;// - N_PILOTS; 
-        generateIndices();  // Генерируем индексы данных и пилотов при инициализации
-    }
+    OFDM_mod();
 
     std::vector<int> data_indices;
     std::vector<int> pilot_indices;
