@@ -10,9 +10,15 @@ namespace {
     using cd = std::complex<double>;
 }
 
+// std::cout << "ofdm_symbol" << std::endl;
+// for (const auto &val : ofdm_symbol) {
+//     std::cout << val << ",\n";
+// }
+
+// OFDM модуляция
+// На вход матрица IQ символов, на выходе сэмплы для передачи
 std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_matrix) {
     std::vector<cd> output;
-    //N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS;
 
     auto mapped_pss = mapPSS();
 
@@ -25,20 +31,14 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
         for (size_t i = 0; i < input_symbols.size(); i += N_active_subcarriers * OFDM_SYM_IN_SLOT) {
 
             for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
-                // 66 активных поднесущих 
+                // input_symbols - данные на 1 символ
                 std::vector<cd> ofdm_symbol(input_symbols.begin() + i +  k      * (N_active_subcarriers-1),
                                             input_symbols.begin() + i + (k + 1) * (N_active_subcarriers-1));
+
                 ofdm_symbol = mapToSubcarriers(ofdm_symbol);
 
-                // std::cout << "ofdm_symbol" << std::endl;
-                // for (const auto &val : ofdm_symbol) {
-                //     std::cout << val << ",\n";
-                // }
-
-                // FFTShift
                 ofdm_symbol = fftshift(ofdm_symbol);
 
-                // IFFT
                 auto time_domain_symbol = ifft(ofdm_symbol);
 
                 // Добавление циклического префикса
@@ -59,54 +59,40 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
     return output;
 }
 
+// Маппинг данных по поднесущим
 std::vector<cd> OFDM_mod::mapToSubcarriers(const std::vector<cd> &input) {
-
     std::vector<cd> subcarriers(N_FFT, 0);
-    int left_active = (N_FFT - N_active_subcarriers) / 2;
-    int middle_index = N_FFT / 2;
-    int data_index = 0;
-    int pilot_index = 0;
-    int pilot_interval = N_active_subcarriers / (N_PILOTS-1);
-    cd pilot_value(1, 1);  
-    // Индексы пилотов - 30 43 56 69 82 95  
 
-    for (int i = 0; i < N_active_subcarriers; ++i) {
-        int current_index = left_active + i;
-
-        if (current_index == middle_index) {
-            subcarriers[current_index] = cd(0.0, 0.0);
-        }
-
-        else if (pilot_index < N_PILOTS && i % pilot_interval == 0) {
-            subcarriers[current_index] = pilot_value;
-            pilot_index++;
-        } else {
-            subcarriers[current_index] = input[data_index];
-            data_index++;
-        }
+    cd pilot_value(1, 1);
+    
+    // Расставляем пилоты по заранее известным индексам
+    for (int pilot_index : pilot_indices) {
+        subcarriers[pilot_index] = pilot_value;
     }
+
+    // Расставляем данные по заранее известным индексам
+    int data_index = 0;
+    for (int data_pos : data_indices) {
+        subcarriers[data_pos] = input[data_index++];
+    }
+
     return subcarriers;
 }
-// Маппинг PSS к поднесущим
+
+// Маппинг PSS, ifft над PSS
 std::vector<cd> OFDM_mod::mapPSS() {
     std::vector<cd> subcarriers(N_FFT, 0);
     std::vector<cd> pss = ZadoffChu();
 
     int left_active = (N_FFT / 2) - 31;
 
-    std::cout << "left_active: " << left_active << std::endl;
     for (int i = 0; i < 62; ++i) {
         subcarriers[left_active + i] = pss[i];
         if (i==31) subcarriers[left_active + i] = 0;
     }
 
-    // for (const auto &value : subcarriers) {
-    //     std::cout << value << ",\n";
-    // }
-    // FFTShift
     subcarriers = fftshift(subcarriers);
 
-    // IFFT
     subcarriers = ifft(subcarriers);
 
     return subcarriers;
@@ -133,16 +119,6 @@ void OFDM_mod::generateIndices() {
             data_indices.push_back(current_index);
         }
     }
-    // std::cout << "data_indices" << std::endl;
-    // for (const auto &val : data_indices) {
-    //     std::cout << val << " ";
-    // }
-    // std::cout << std::endl;
-    // std::cout << "pilot_indices" << std::endl;
-    //     for (const auto &val : pilot_indices) {
-    //     std::cout << val << " ";
-    // }
-    // std::cout << std::endl;
 }
 
 // Последовательность Zadoff-Chu для PSS

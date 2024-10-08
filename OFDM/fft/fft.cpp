@@ -7,7 +7,7 @@
 namespace
 {
     using cd = std::complex<double>;
-    const double PI = std::numbers::pi;
+    const double PI = 3.141592653589793;
 }
 
 int reverse(int num, int lg_n) {
