@@ -2,10 +2,10 @@
 #include <vector>
 #include <random>
 #include <cmath>
-#include "../../QAM_Modulation/modulation.h"
+#include "../qam_mod.h"
 #include "../qam_demod.h"
 
-// g++ test.cpp ../../QAM_Modulation/modulation.cpp ../qam_demod.cpp -o test && ./test
+// g++ test.cpp ../qam_mod.cpp ../qam_demod.cpp -o test && ./test
 
 namespace {
     using cd = std::complex<double>;

@@ -1,8 +1,8 @@
 ﻿#include <iostream>
 #include <vector>
-#include "../modulation.h"
+#include "../qam_mod.h"
 
-// g++ test.cpp ../modulation.cpp -o test && ./test
+// g++ test.cpp ../qam_mod.cpp -o test && ./test
 
 int main() {
     std::vector<std::vector<uint8_t>> bits = {{0, 1, 1, 0, 1, 1, 0, 0, 0, 0}}; 

@@ -1,4 +1,4 @@
-﻿#include "modulation.h"
+﻿#include "qam_mod.h"
 #include <iostream>
 #include <cmath>
 #include <complex>
