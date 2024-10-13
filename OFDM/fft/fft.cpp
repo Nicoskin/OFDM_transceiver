@@ -10,6 +10,17 @@ namespace
     const double PI = 3.141592653589793;
 }
 
+// Функция для получения ближайшей степени двойки
+int nearest_power_of_two(int n) {
+    if (n <= 0) return 1;
+    int power = 1;
+    while (power < n) {
+        power <<= 1;
+    }
+    return power;
+}
+
+
 int reverse(int num, int lg_n) {
     int res = 0;
     for (int i = 0; i < lg_n; i++) {
@@ -20,14 +31,17 @@ int reverse(int num, int lg_n) {
 }
 
 std::vector<cd> fft(const std::vector<cd> &num) {
-    std::vector<cd> fft_image{num};
     int n = num.size();
+    int n_padded = nearest_power_of_two(n);  // Определение ближайшей степени двойки
+    
+    std::vector<cd> fft_image(n, 0); // Массив с нулями для заполнения
+    std::copy(num.begin(), num.end(), fft_image.begin());  // Копируем исходные данные в начало
 
     // Проверка, является ли n четной степенью двойки
-    if (n <= 0 || (n & (n - 1)) != 0) {
-        std::cerr << "Error: Size of input vector must be a positive power of 2." << std::endl;
-        return {};
-    }
+    // if (n <= 0 || (n & (n - 1)) != 0) {
+    //     std::cerr << "Error: Size of input vector must be a positive power of 2." << std::endl;
+    //     return {};
+    // }
 
     int lg_n = 0;
     while ((1 << lg_n) < n)
