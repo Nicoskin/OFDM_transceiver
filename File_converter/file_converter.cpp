@@ -3,10 +3,11 @@
 #include <iterator>
 #include <stdexcept>
 #include <filesystem>
+#include <random>
 
 namespace fs = std::filesystem;
 
-std::vector<uint8_t> fileToBitsWithMetadata(const std::string& filePath, std::string& fileName) {
+std::vector<uint8_t> file2bits(const std::string& filePath, std::string& fileName) {
     std::ifstream inputFile(filePath, std::ios::binary);
     if (!inputFile) {
         throw std::runtime_error("Failed to open file for reading: " + filePath);
@@ -44,7 +45,7 @@ std::vector<uint8_t> fileToBitsWithMetadata(const std::string& filePath, std::st
     return bits;
 }
 
-void bitsToFileWithMetadata(const std::string& outputDir, const std::vector<uint8_t>& bits, std::string& fileName) {
+void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits, std::string& fileName) {
     if (bits.size() < 8) {
         throw std::runtime_error("Invalid bits data");
     }
@@ -88,4 +89,18 @@ void bitsToFileWithMetadata(const std::string& outputDir, const std::vector<uint
 
     // Write the file data
     outputFile.write(reinterpret_cast<const char*>(fileData.data()), fileData.size());
+}
+
+std::vector<uint8_t> generateRandBits(size_t n, unsigned int seed) {
+    std::vector<uint8_t> bits(n);
+    
+    // Если сид равен 0, используем случайный генератор с временем как сидом
+    std::mt19937 generator(seed == 0 ? std::random_device{}() : seed);
+    std::uniform_int_distribution<uint8_t> distribution(0, 1);
+    
+    for (size_t i = 0; i < n; ++i) {
+        bits[i] = distribution(generator);
+    }
+    
+    return bits;
 }
