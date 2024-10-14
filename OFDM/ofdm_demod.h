@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <complex>
+#include <cmath>
+#include <algorithm>
+#include <numeric>
+
 #include "../base_define.h"
 
 class OFDM_demod {

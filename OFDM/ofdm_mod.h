@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <complex>
+#include <cmath>
+#include <algorithm>
 #include "../base_define.h"
 
 class OFDM_mod {

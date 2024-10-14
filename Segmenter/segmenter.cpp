@@ -1,9 +1,6 @@
 ﻿#include "segmenter.h"
-#include <vector>
-#include <cstdint>
 #include <iostream>
-#include <bitset>
-#include <random>
+
 
 // Конструктор класса Segmenter
 Segmenter::Segmenter(

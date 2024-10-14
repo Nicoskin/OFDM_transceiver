@@ -5,9 +5,9 @@
 
 int main() {
 
-    auto bits = generateRandBits(100, 1);
-    for(const auto &bit : bits) {
-        std::cout << static_cast<int>(bit) << " ";
+    auto bits = generateRandBits(100);
+    for(auto &bit : bits) {
+        std::cout << static_cast<int>(bit) << "";
     }
     std::cout << std::endl;
     return 0;

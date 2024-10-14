@@ -1,9 +1,5 @@
 ﻿#include "file_converter.h"
-#include <fstream>
-#include <iterator>
-#include <stdexcept>
-#include <filesystem>
-#include <random>
+
 
 namespace fs = std::filesystem;
 

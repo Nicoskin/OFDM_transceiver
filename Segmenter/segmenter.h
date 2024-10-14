@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <cstdint>
+#include <bitset>
+#include <random>
+
 #include "../base_define.h"
 
 class Segmenter {

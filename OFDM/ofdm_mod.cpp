@@ -1,8 +1,5 @@
 ﻿#include "ofdm_mod.h"
 #include "fft/fft.h"
-#include <cmath>
-#include <complex>
-#include <algorithm>
 
 #include <iostream>
 

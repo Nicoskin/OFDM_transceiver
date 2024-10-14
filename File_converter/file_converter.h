@@ -4,6 +4,11 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <fstream>
+#include <iterator>
+#include <stdexcept>
+#include <filesystem>
+#include <random>
 
 std::vector<uint8_t> file2bits(const std::string& filePath, std::string& fileName);
 void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits, std::string& fileName);

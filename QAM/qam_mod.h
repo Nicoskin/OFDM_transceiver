@@ -4,6 +4,7 @@
 #include <vector>
 #include <complex>
 #include <memory>
+#include <cmath>
 
 class Modulation {
 public:

@@ -1,9 +1,6 @@
 ﻿#include "qam_mod.h"
 #include <iostream>
-#include <cmath>
-#include <complex>
-#include <memory>
-#include <vector>
+
 
 namespace {
     using cd = std::complex<double>;
