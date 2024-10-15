@@ -1,6 +1,8 @@
 ﻿#include "ofdm_demod.h"
 #include "fft/fft.h"
 
+#include "ofdm_mod.h"
+
 #include <iostream>
 
 namespace {
@@ -96,7 +98,7 @@ std::vector<cd> OFDM_demod::correlateShifted(const std::vector<cd>& vec1, const 
     size_t vec1_size = vec1.size();
 
     // Убедитесь, что vec1 больше, чем vec2
-    if (vec1_size <= vec2_size) {
+    if (vec1_size < vec2_size) {
         throw std::invalid_argument("vec1 must be larger than vec2");
     }
 
@@ -114,3 +116,73 @@ std::vector<cd> OFDM_demod::correlateShifted(const std::vector<cd>& vec1, const 
 
     return result;
 }
+/*
+// Возвращает индекс максимального значения в векторе
+int maxIndex(const std::vector<cd>& vec) {
+    int maxIndex = 0;
+    double maxMagnitude = std::abs(vec[0]);
+
+    for (size_t i = 1; i < vec.size(); ++i) {
+        double magnitude = std::abs(vec[i]);
+        if (magnitude > maxMagnitude) {
+            maxMagnitude = magnitude;
+            maxIndex = i;
+        }
+    }
+
+    return maxIndex;
+}
+
+// Возвращает первый индекс который больше порогового значения
+// threshold ≈ 0.99
+int findFIndexThreshold(const std::vector<cd>& vec, double threshold) {
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (std::abs(vec[i]) > threshold) {
+            return i; // Возвращаем индекс первого найденного значения
+        }
+    }
+    return -1; // Если не найдено, возвращаем -1
+}
+
+std::vector<int> indexsPSS (const std::vector<cd>& vec) {
+    OFDM_mod ofdm_mod;
+    std::vector<cd> timePSS = ofdm_mod.mapPSS();
+
+    std::vector<cd> corr = correlateShifted(vec, timePSS, true);
+
+    int first_index = findFIndexThreshold(corr);
+    
+}
+*/
+// Функция корреляции для нахождения циклического префикса
+std::vector<cd> OFDM_demod::CP_CorrIndexs(const std::vector<cd>& vec) {
+    const short int n = vec.size();
+    std::vector<cd> correlations(n, 0.0);
+    
+    // Корреляция для каждой позиции
+    for (int i = 0; i < n; ++i) {
+        std::vector<cd> cp_window(vec.begin() + i, vec.begin() + i + CP_LEN);
+        std::vector<cd> next_window(vec.begin() + i + N_FFT, vec.begin() + i + N_FFT + CP_LEN);
+
+        correlations[i] = correlateStatic(cp_window, next_window, true);
+    }
+
+    return correlations;
+}
+
+/*
+// Функция для поиска индекса максимальной корреляции (индекс циклического префикса)
+int findMaxCorrelationIndex(const std::vector<std::complex<double>>& data) {
+    std::vector<double> correlations = findCyclicPrefixCorrelation(data);
+    
+    // Поиск индекса максимального значения
+    int max_index = 0;
+    for (int i = 1; i < correlations.size(); ++i) {
+        if (correlations[i] > correlations[max_index]) {
+            max_index = i;
+        }
+    }
+
+    return max_index;
+}
+*/

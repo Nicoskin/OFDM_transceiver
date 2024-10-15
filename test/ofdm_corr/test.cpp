@@ -8,7 +8,7 @@
 #include "../../OFDM/ofdm_mod.h"
 #include "../../OFDM/ofdm_demod.h"
 
-// g++ test.cpp ../qam_mod.cpp ../qam_demod.cpp -o test && ./test
+// g++ test.cpp ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp -o test && ./test
 
 namespace {
     using cd = std::complex<double>;
@@ -73,15 +73,14 @@ int main() {
     OFDM_mod ofdm_mod;
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
-    // std::cout << "OFDM Bits:\n";
+    // std::cout << "OFDM samples:\n";
     // for (const auto& sym : ofdm_data) {
     //     std::cout << sym << ",\n";
     // }
     // std::cout << std::endl;
 
-
     // Параметры SNR и флаг для фиксации сида
-    double snr = 8.0; // Пример SNR в dB
+    double snr = 10.0; // Пример SNR в dB
     bool fixed_seed = false; // Установить в true для фиксированного сида
 
     // Добавляем шум к данным QPSK
@@ -94,9 +93,20 @@ int main() {
     // }
     // std::cout << std::endl;
 
-    OFDM_demod ofdm_demod;
-    auto corr = ofdm_demod.fft_convolve(noisy_signal, ofdm_mod.mapPSS());
+    auto pss = ofdm_mod.mapPSS();
 
+    // std::cout << "pss:\n";
+    // for (const auto& symbol : pss) {
+    //     std::cout << symbol << ",\n";
+    // }
+    // std::cout << std::endl;
+
+
+    OFDM_demod ofdm_demod;
+    auto corr = ofdm_demod.correlateShifted(ofdm_data, pss, false);
+    //auto corr = ofdm_demod.correlateStatic(pss, pss, true);
+    // auto corr = ofdm_demod.convolve(pss, pss);
+    //std::cout << corr << std::endl;
     // Выводим результат
     std::cout << "Corr Signal:\n";
     for (const auto& symbol : corr) {
@@ -111,5 +121,6 @@ int main() {
     }
     std::cout << std::endl;
 */
+
     return 0;
 }

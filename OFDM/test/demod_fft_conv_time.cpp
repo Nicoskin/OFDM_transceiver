@@ -11,7 +11,7 @@ int main() {
     OFDM_demod OFDM_demod;
 
     // Создание массива из 1 миллиона значений
-    std::vector<std::complex<double>> large_vec(1e6);
+    std::vector<std::complex<double>> large_vec(5e5);
     for (size_t i = 0; i < large_vec.size(); ++i) {
         large_vec[i] = {static_cast<double>(i % 100), static_cast<double>(i % 100)};
     }
@@ -41,6 +41,9 @@ int main() {
     return 0;
 }
 
+// 500k
+// Convolution took: 0.898063 seconds.
+// Correlation took: 0.380306 seconds.
 
 // Проведённые тесты:
 // 1млн
