@@ -7,11 +7,12 @@
 
 // g++ demod_fft_conv_time.cpp ../ofdm_demod.cpp ../fft/fft.cpp -o test && ./test
 
+
 int main() {
     OFDM_demod OFDM_demod;
 
     // Создание массива из 1 миллиона значений
-    std::vector<std::complex<double>> large_vec(190e3);
+    std::vector<std::complex<double>> large_vec(1e6);
     for (size_t i = 0; i < large_vec.size(); ++i) {
         large_vec[i] = {static_cast<double>(i % 100), static_cast<double>(i % 100)};
     }
@@ -34,9 +35,15 @@ int main() {
     auto end_correlate = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_correlate = end_correlate - start_correlate;
 
+    auto start_corr = std::chrono::high_resolution_clock::now();
+    auto correlate_norm = OFDM_demod.correlate(large_vec, small_vec, false);
+    auto end_corr = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_corre = end_corr - start_corr;
+
     // Печать результатов
-    std::cout << "Convolution took: " << duration_convolve.count() << " seconds." << std::endl;
-    std::cout << "Correlation took: " << duration_correlate.count() << " seconds." << std::endl;
+    std::cout << "Convolution took : " << duration_convolve.count() << " seconds." << std::endl;
+    std::cout << "Correlation took : " << duration_correlate.count() << " seconds." << std::endl;
+    std::cout << "Correlation norm : " << duration_corre.count() << " seconds." << std::endl;
 
     return 0;
 }

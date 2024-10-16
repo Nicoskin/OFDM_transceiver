@@ -116,6 +116,36 @@ std::vector<cd> OFDM_demod::correlateShifted(const std::vector<cd>& vec1, const 
 
     return result;
 }
+
+// Обычная и нормализованная корреляция в одной функции
+std::vector<double> OFDM_demod::correlate(const std::vector<cd>& vec1, const std::vector<cd>& vec2, bool norm) {
+    int n = vec1.size();
+    int m = vec2.size();
+    std::vector<double> result(n - m + 1, 0.0); // Вектор для возвращения результата
+
+    double max_corr = 0.0; // Для отслеживания максимального значения корреляции
+
+    for (int i = 0; i <= n - m; ++i) {
+        cd sum(0, 0);
+        for (int j = 0; j < m; ++j) {
+            sum += vec1[i + j] * std::conj(vec2[j]); // умножение на комплексно сопряженное
+        }
+        result[i] = std::abs(sum); // Сохраняем модуль комплексного числа
+        if (result[i] > max_corr) {
+            max_corr = result[i]; // Обновляем максимальное значение
+        }
+    }
+
+    // Если norm == true, нормализуем значения в диапазоне от 0 до 1
+    if (norm && max_corr > 0.0) {
+        for (auto& val : result) {
+            val /= max_corr;
+        }
+    }
+
+    return result;
+}
+
 /*
 // Возвращает индекс максимального значения в векторе
 int maxIndex(const std::vector<cd>& vec) {

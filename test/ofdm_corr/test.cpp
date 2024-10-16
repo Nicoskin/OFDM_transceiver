@@ -103,7 +103,7 @@ int main() {
 
 
     OFDM_demod ofdm_demod;
-    auto corr = ofdm_demod.correlateShifted(ofdm_data, pss, false);
+    auto corr = ofdm_demod.correlate_norm(ofdm_data, pss);
     //auto corr = ofdm_demod.correlateStatic(pss, pss, true);
     // auto corr = ofdm_demod.convolve(pss, pss);
     //std::cout << corr << std::endl;

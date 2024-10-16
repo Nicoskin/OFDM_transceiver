@@ -18,6 +18,8 @@ public:
     cd correlateStatic(const std::vector<cd>& vec1, const std::vector<cd>& vec2, bool norm = false);
     std::vector<cd> correlateShifted(const std::vector<cd>& vec1, const std::vector<cd>& vec2, bool norm = false);
 
+    std::vector<double> correlate(const std::vector<cd>& vec1, const std::vector<cd>& vec2, bool norm = true);
+
     int maxIndex(const std::vector<cd>& vec);
     std::vector<cd> CP_CorrIndexs(const std::vector<cd>& vec);
 
