@@ -11,7 +11,7 @@ int main() {
     OFDM_demod OFDM_demod;
 
     // Создание массива из 1 миллиона значений
-    std::vector<std::complex<double>> large_vec(5e5);
+    std::vector<std::complex<double>> large_vec(190e3);
     for (size_t i = 0; i < large_vec.size(); ++i) {
         large_vec[i] = {static_cast<double>(i % 100), static_cast<double>(i % 100)};
     }

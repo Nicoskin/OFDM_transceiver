@@ -16,8 +16,12 @@ public:
     std::vector<int> pilot_indices;
 
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
+
+    std::vector<cd> mapPSS(int u = 25);
     std::vector<cd> ZadoffChu(int u = 25);
-    std::vector<cd> mapPSS();
+
+    std::vector<cd> mapSSS(int N_ID_cell);
+    std::vector<cd> generate_sss(int N_ID_cell);
 
 private:
     int N_active_subcarriers;
