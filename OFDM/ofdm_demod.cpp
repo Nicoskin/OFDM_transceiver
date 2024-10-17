@@ -43,21 +43,21 @@ std::vector<cd> OFDM_demod::convolve(const std::vector<cd>& vec1, const std::vec
     // ДЛЯ облегчения функции можно округление убрать
     ////////////////////////
     // Устанавливаем порог для округления малых значений до нуля
-    const double threshold = 1e-8; // Порог для обнуления
-    for (auto& val : result) {
-        double real_part = std::real(val); 
-        double imag_part = std::imag(val);
+    // const double threshold = 1e-8; // Порог для обнуления
+    // for (auto& val : result) {
+    //     double real_part = std::real(val); 
+    //     double imag_part = std::imag(val);
 
-        // Обнуляем реальную и мнимую часть, если она меньше порога
-        if (std::abs(real_part) < threshold) {
-            real_part = 0;  
-        }
-        if (std::abs(imag_part) < threshold) {
-            imag_part = 0; 
-        }
+    //     // Обнуляем реальную и мнимую часть, если она меньше порога
+    //     if (std::abs(real_part) < threshold) {
+    //         real_part = 0;  
+    //     }
+    //     if (std::abs(imag_part) < threshold) {
+    //         imag_part = 0; 
+    //     }
 
-        val = cd(real_part, imag_part); // Присваиваем модифицированное комплексное значение обратно
-    }
+    //     val = cd(real_part, imag_part); // Присваиваем модифицированное комплексное значение обратно
+    // }
 
 
     return result; // Возвращаем результат корреляции

@@ -20,48 +20,45 @@ int nearest_power_of_two(int n) {
     return power;
 }
 
-
+// Функция реверсирования
 int reverse(int num, int lg_n) {
     int res = 0;
     for (int i = 0; i < lg_n; i++) {
-        if (num & (1 << i))
-            res |= 1 << (lg_n - 1 - i);
+        res |= (num & (1 << i)) ? (1 << (lg_n - 1 - i)) : 0;
     }
     return res;
 }
 
-std::vector<cd> fft(const std::vector<cd> &num) {
+std::vector<cd> fft(const std::vector<cd>& num) {
     int n = num.size();
-    int n_padded = nearest_power_of_two(n);  // Определение ближайшей степени двойки
-    
-    std::vector<cd> fft_image(n, 0); // Массив с нулями для заполнения
-    std::copy(num.begin(), num.end(), fft_image.begin());  // Копируем исходные данные в начало
+    int n_padded = nearest_power_of_two(n);
+    std::vector<cd> fft_image(n_padded, 0); // Инициализация с нулями
 
-    // Проверка, является ли n четной степенью двойки
-    // if (n <= 0 || (n & (n - 1)) != 0) {
-    //     std::cerr << "Error: Size of input vector must be a positive power of 2." << std::endl;
-    //     return {};
-    // }
+    // Копируем исходные данные в начало
+    std::copy(num.begin(), num.end(), fft_image.begin());
 
-    int lg_n = 0;
-    while ((1 << lg_n) < n)
-        lg_n++;
+    int lg_n = log2(n_padded);
 
-    for (int i = 0; i < n; i++) {
-        if (i < reverse(i, lg_n))
-            std::swap(fft_image[i], fft_image[reverse(i, lg_n)]);
+    // Реверсирование индексов
+    for (int i = 0; i < n_padded; i++) {
+        int rev_i = reverse(i, lg_n);
+        if (i < rev_i) {
+            std::swap(fft_image[i], fft_image[rev_i]);
+        }
     }
 
-    for (int len = 2; len <= n; len <<= 1) {
-        double ang = 2 * PI / len * -1;
-        cd wlen = std::polar(1.0, ang);
-        for (int i = 0; i < n; i += len) {
+    // Основной алгоритм FFT
+    for (int len = 2; len <= n_padded; len <<= 1) {
+        double ang = 2 * PI / len;
+        cd wlen(cos(ang), sin(ang)); // Вещественная часть на основании угла
+        for (int i = 0; i < n_padded; i += len) {
             cd w(1);
             for (int j = 0; j < len / 2; j++) {
-                cd u = fft_image[i + j], v = fft_image[i + j + len / 2] * w;
+                cd u = fft_image[i + j];
+                cd v = fft_image[i + j + len / 2] * w;
                 fft_image[i + j] = u + v;
                 fft_image[i + j + len / 2] = u - v;
-                w *= wlen;
+                w *= wlen; // Умножаем на wlen
             }
         }
     }
@@ -69,11 +66,11 @@ std::vector<cd> fft(const std::vector<cd> &num) {
     return fft_image;
 }
 
-std::vector<cd> ifft(const std::vector<cd> &num) {
+std::vector<cd> ifft(const std::vector<cd>& num) {
     std::vector<cd> ifft_image = fft(num);
     int n = ifft_image.size();
 
-    for (cd & x : ifft_image)
+    for (cd& x : ifft_image)
         x /= n;
 
     std::reverse(ifft_image.begin() + 1, ifft_image.end());
