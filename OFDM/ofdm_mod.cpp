@@ -13,7 +13,7 @@ namespace {
 // }
 
 OFDM_mod::OFDM_mod(){
-    N_active_subcarriers = N_FFT - G_SUBCAR; // - N_PILOTS; 
+    N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS -1; 
     generateIndices();  // Генерируем индексы данных и пилотов при инициализации
 };
 
@@ -38,7 +38,7 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
             for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
                 // input_symbols - данные на 1 символ
                 std::vector<cd> ofdm_symbol(input_symbols.begin() + i +  k      * (N_active_subcarriers-1),
-                                            input_symbols.begin() + i + (k + 1) * (N_active_subcarriers-1));
+                                            input_symbols.begin() + i + (k + 1) * (N_active_subcarriers));
 
                 ofdm_symbol = mapToSubcarriers(ofdm_symbol);
 
@@ -108,12 +108,12 @@ void OFDM_mod::generateIndices() {
 
     int left_active = G_SUBCAR / 2;
     int middle_index = N_FFT / 2;
-    int pilot_interval = N_active_subcarriers / (N_PILOTS - 1);
+    int pilot_interval = (N_active_subcarriers + N_PILOTS + 1) / (N_PILOTS - 1);
 
-    for (int i = 0; i < N_active_subcarriers; ++i) {
+    for (int i = 0; i < N_active_subcarriers + N_PILOTS + 1; ++i) {
         int current_index = left_active + i;
 
-        if (current_index == middle_index-1) {
+        if (current_index == middle_index) {
             continue; // Пропускаем DC-компонент
         } else if (i % pilot_interval == 0 && pilot_indices.size() < N_PILOTS) {
             // Генерируем индексы для пилотов
