@@ -38,7 +38,7 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
             for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
                 // input_symbols - данные на 1 символ
                 std::vector<cd> ofdm_symbol(input_symbols.begin() + i +  k      * (N_active_subcarriers-1),
-                                            input_symbols.begin() + i + (k + 1) * (N_active_subcarriers));
+                                            input_symbols.begin() + i + (k + 1) * (N_active_subcarriers-1)+1); // +1 для включения последнего элемента
 
                 ofdm_symbol = mapToSubcarriers(ofdm_symbol);
 
