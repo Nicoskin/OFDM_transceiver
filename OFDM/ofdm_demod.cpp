@@ -216,3 +216,34 @@ int findMaxCorrelationIndex(const std::vector<std::complex<double>>& data) {
     return max_index;
 }
 */
+
+// Функция для вычисления взаимной корреляции между двумя векторами
+std::vector<double> cross_correlation(const std::vector<std::complex<double>>& y1, 
+                                      const std::vector<std::complex<double>>& y2) {
+    int size1 = y1.size();
+    int size2 = y2.size();
+    
+    // Массив для хранения значений корреляции
+    std::vector<double> cc(size1, 0.0);
+
+    // Проходим по всем сдвигам второго вектора относительно первого
+    for (int n = 0; n < size1; ++n) {
+        std::complex<double> numerator = 0.0;
+        double norm_y1 = 0.0;
+        double norm_y2 = 0.0;
+
+        // Вычисляем корреляцию для каждого сдвига
+        for (int m = 0; m < size2; ++m) {
+            if (n + m < size1) {
+                numerator += y1[n + m] * std::conj(y2[m]);  // числитель
+                norm_y1 += std::norm(y1[n + m]);           // норма вектора y1
+                norm_y2 += std::norm(y2[m]);               // норма вектора y2
+            }
+        }
+
+        // Нормализуем результат для текущего сдвига
+        cc[n] = std::abs(numerator) / (std::sqrt(norm_y1) * std::sqrt(norm_y2));
+    }
+
+    return cc;
+}
