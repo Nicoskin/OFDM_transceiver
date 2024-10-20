@@ -20,7 +20,7 @@ namespace {
 int main() {
     // Сегментер
     Segmenter segmenter;
-    auto bits = generateRandBits(5000);
+    auto bits = generateRandBits(500);
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
 

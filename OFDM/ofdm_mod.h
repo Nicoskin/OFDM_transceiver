@@ -5,7 +5,7 @@
 #include <complex>
 #include <cmath>
 #include <algorithm>
-#include "../base_define.h"
+#include "../config.h"
 
 class OFDM_mod {
 public:

@@ -60,7 +60,8 @@ int main() {
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
 
-    auto qpsk_mod = modulate(segments, 2);
+    QAM_mod qam_mod; 
+    auto qpsk_mod = qam_mod.modulate(segments, QPSK);
 
     // std::cout << "Modulated Symbols:\n";
     // for (const auto& symbol_vec : qpsk_mod) {

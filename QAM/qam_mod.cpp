@@ -35,10 +35,29 @@ static const std::vector<cd> QAM64_MAP = {
     -7.0 - 1.0i, -7.0 - 3.0i, -7.0 - 5.0i, -7.0 - 7.0i
 };
 
-Modulation::Modulation(size_t length) : symbols(length) {}
+// Карта символов для быстрого доступа
+const std::unordered_map<ModulationType, std::vector<cd>> QAM_mod::symbolMaps = {
+    {BPSK, BPSK_MAP},
+    {QPSK, QPSK_MAP},
+    {QAM16, QAM16_MAP},
+    {QAM64, QAM64_MAP}
+};
 
-void Modulation::setSymbols(const std::vector<cd>& symbolMap, const std::vector<int>& bits, size_t symbolSize, double normalizationFactor) {
-    for (size_t i = 0; i < symbols.size(); ++i) {
+// Параметры модуляции: количество бит на символ и нормализующий коэффициент
+const std::unordered_map<ModulationType, std::pair<size_t, double>> QAM_mod::modulationParameters = {
+    {BPSK, {1, 1.0}},
+    {QPSK, {2, 2.0}},
+    {QAM16, {4, 10.0}},
+    {QAM64, {6, 42.0}}
+};
+
+
+// Установить символы на основе битов
+void QAM_mod::setSymbols(const std::vector<cd>& symbolMap, const std::vector<int>& bits, size_t symbolSize, double normalizationFactor) {
+    size_t numSymbols = bits.size() / symbolSize;
+    symbols.resize(numSymbols); // Изменяем размер вектора символов
+
+    for (size_t i = 0; i < numSymbols; ++i) {
         int index = 0;
         for (size_t j = 0; j < symbolSize; ++j) {
             index = (index << 1) | bits[i * symbolSize + j];
@@ -47,55 +66,30 @@ void Modulation::setSymbols(const std::vector<cd>& symbolMap, const std::vector<
     }
 }
 
-std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& bits, int modulation) {
-    size_t symbolSize = 0;
-    double normalizationFactor = 1.0;
-    const std::vector<cd>* symbolMap;
-
-    switch (modulation) {
-        case 1:
-            symbolSize = 1;
-            normalizationFactor = 1.0;
-            symbolMap = &BPSK_MAP;
-            break;
-
-        case 2:
-            symbolSize = 2;
-            normalizationFactor = 2.0;
-            symbolMap = &QPSK_MAP;
-            break;
-
-        case 4:
-            symbolSize = 4;
-            normalizationFactor = 10.0;
-            symbolMap = &QAM16_MAP;
-            break;
-
-        case 6:
-            symbolSize = 6;
-            normalizationFactor = 42.0;
-            symbolMap = &QAM64_MAP;
-            break;
-
-        default:
-            std::cerr << "Unsupported modulation type" << std::endl;
-            return {};
+// Модуляция на основе типа модуляции
+std::vector<std::vector<cd>> QAM_mod::modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulationType) {
+    if (modulationParameters.find(modulationType) == modulationParameters.end()) {
+        std::cerr << "Unsupported modulation type" << std::endl;
+        return {};
     }
+
+    size_t symbolSize = modulationParameters.at(modulationType).first;
+    double normalizationFactor = modulationParameters.at(modulationType).second;
+    const std::vector<cd>& symbolMap = symbolMaps.at(modulationType);
 
     std::vector<std::vector<cd>> result;
 
     for (const auto& bitVec : bits) {
         std::vector<int> intBits(bitVec.begin(), bitVec.end());
-        
+
+        // Дополняем нулями, если не кратно размеру символа
         while (intBits.size() % symbolSize != 0) {
             intBits.push_back(0);
         }
 
-        size_t numSymbols = intBits.size() / symbolSize;
-        Modulation mod(numSymbols);
-        mod.setSymbols(*symbolMap, intBits, symbolSize, normalizationFactor);
-
-        result.push_back(mod.symbols);
+        // Устанавливаем символы и модулируем
+        setSymbols(symbolMap, intBits, symbolSize, normalizationFactor);
+        result.push_back(symbols);
     }
 
     return result;

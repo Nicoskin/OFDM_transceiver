@@ -1,11 +1,12 @@
 ﻿#include "qam_demod.h"
+#include "qam_mod.h"
 
 namespace {
     using cd = std::complex<double>;
     using namespace std::complex_literals;  
 }
 
-QAMDemodulator::QAMDemodulator(ModulationScheme modScheme) : modScheme(modScheme) {
+QAMDemodulator::QAMDemodulator(ModulationType modScheme) : modScheme(modScheme) {
     generateConstellation();
 }
 

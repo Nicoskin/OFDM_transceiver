@@ -7,10 +7,12 @@
 int main() {
     std::vector<std::vector<uint8_t>> bits = {{0, 1, 1, 0, 1, 1, 0, 0, 0, 0}}; 
 
-    auto bpsk_mod = modulate(bits, 1);
-    auto qpsk_mod = modulate(bits, 2);
-    auto qam16_mod = modulate(bits, 4);
-    auto qam64_mod = modulate(bits, 6);
+    QAM_mod QAM_mod; 
+
+    auto bpsk_mod = QAM_mod.modulate(bits, BPSK);
+    auto qpsk_mod = QAM_mod.modulate(bits, QPSK);
+    auto qam16_mod = QAM_mod.modulate(bits, QAM16);
+    auto qam64_mod = QAM_mod.modulate(bits, QAM64);
 
     std::cout << "BPSK Modulation:" << std::endl;
     for (const auto& symbol_vec : bpsk_mod) {

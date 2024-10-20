@@ -8,17 +8,17 @@
 #include <bitset>
 #include <map>
 
-enum ModulationScheme { BPSK, QPSK, QAM16, QAM64 };
+#include "qam_mod.h"
 
 class QAMDemodulator {
 public:
-    QAMDemodulator(ModulationScheme modScheme);
+    QAMDemodulator(ModulationType modScheme);
 
     std::vector<std::vector<double>> demodulate(const std::vector<std::complex<double>>& receivedSignal);
     std::vector<int> softDecisionsToBits(const std::vector<std::vector<double>>& softDecisions);
 
 private:
-    ModulationScheme modScheme;
+    ModulationType modScheme;
     std::vector<std::complex<double>> constellation;
 
     void generateConstellation();

@@ -6,7 +6,7 @@
 #include <bitset>
 #include <random>
 
-#include "../base_define.h"
+#include "../config.h"
 
 class Segmenter {
 public:

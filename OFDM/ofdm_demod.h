@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <numeric>
 
-#include "../base_define.h"
+#include "../config.h"
 
 class OFDM_demod {
 public:
