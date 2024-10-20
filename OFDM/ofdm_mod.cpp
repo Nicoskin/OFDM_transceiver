@@ -89,10 +89,11 @@ std::vector<cd> OFDM_mod::mapPSS(int u) {
     std::vector<cd> pss = ZadoffChu();
 
     int left_active = (N_FFT / 2) - 31;
-
-    for (int i = 0; i < 62; ++i) {
-        subcarriers[left_active + i] = pss[i];
+    
+    uint16_t k = 0;
+    for (int i = 0; i < 63; ++i) {
         if (i==31) subcarriers[left_active + i] = 0;
+        else subcarriers[left_active + i] = pss[k++]; 
     }
 
     subcarriers = fftshift(subcarriers);
