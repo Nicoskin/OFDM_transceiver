@@ -1,5 +1,5 @@
-﻿#ifndef BASE_DEFINE_H
-#define BASE_DEFINE_H
+﻿#ifndef CONFIG_H
+#define CONFIG_H
 
 // Параметры OFDM
 #define N_FFT 128
@@ -18,4 +18,4 @@
 
 
 
-#endif
+#endif //CONFIG_H

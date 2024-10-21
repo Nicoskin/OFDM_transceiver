@@ -159,9 +159,9 @@ std::vector<cd> OFDM_mod::mapSSS(int N_ID_cell) {
 
     int left_active = (N_FFT / 2) - 31;
 
-    for (int i = 0; i < 62; ++i) {
-        subcarriers[left_active + i] = sss[i];
+    for (int i = 0; i < 63; ++i) {
         if (i==31) subcarriers[left_active + i] = 0;
+        else subcarriers[left_active + i] = sss[i];
     }
 
     subcarriers = fftshift(subcarriers);
