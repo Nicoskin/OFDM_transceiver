@@ -13,7 +13,10 @@ public:
     OFDM_mod();
 
     std::vector<int> data_indices;
+    std::vector<int> data_indices_noPilots;
+    std::vector<int> data_indices_shifted;
     std::vector<int> pilot_indices;
+    std::vector<int> pilot_indices_shifted;
 
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
 

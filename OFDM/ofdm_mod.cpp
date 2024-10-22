@@ -105,25 +105,72 @@ std::vector<cd> OFDM_mod::mapPSS(int u) {
 
 void OFDM_mod::generateIndices() {
     data_indices.clear();
+    data_indices_noPilots.clear();
+    data_indices_shifted.clear();
     pilot_indices.clear();
+    pilot_indices_shifted.clear();
 
-    int left_active = G_SUBCAR / 2;
-    int middle_index = N_FFT / 2;
-    int pilot_interval = (N_active_subcarriers + N_PILOTS + 1) / (N_PILOTS - 1);
+    int left_active = G_SUBCAR / 2 + 1;
+    int middle_subcarrier = N_FFT / 2;
+    int total_active = (N_active_subcarriers + N_PILOTS + 1);
+    int pilot_interval = total_active  / (N_PILOTS - 1);
 
-    for (int i = 0; i < N_active_subcarriers + N_PILOTS + 1; ++i) {
-        int current_index = left_active + i;
+    int shift = 0;
+    shift = shift % 6;
 
-        if (current_index == middle_index) {
-            continue; // Пропускаем DC-компонент
-        } else if (i % pilot_interval == 0 && pilot_indices.size() < N_PILOTS) {
-            // Генерируем индексы для пилотов
-            pilot_indices.push_back(current_index);
-        } else {
-            // Генерируем индексы для данных
-            data_indices.push_back(current_index);
+    // Проходим по всем поднесущим без защитной полосы
+    for (int i = 0; i < total_active; ++i) {
+        int current_subcarrier = left_active + i;
+
+        // Пропускаем центральную поднесущую (DC)
+        if (current_subcarrier == middle_subcarrier) {
+            continue;
+        }
+
+        data_indices_noPilots.push_back(current_subcarrier);
+
+        // Расстановка пилотов во второй половине поднесущих
+        if      ((i > (total_active - 1) / 2) && 
+                 (i % pilot_interval == (shift + 1) % 6) && 
+                 pilot_indices.size() < N_PILOTS) {
+                 pilot_indices.push_back(current_subcarrier);
+        }
+        // Расстановка пилотов в первой половине поднесущих
+        else if ((i < (total_active - 1) / 2) && 
+                 (i % pilot_interval ==  shift         ) && 
+                 pilot_indices.size() < N_PILOTS) {
+                 pilot_indices.push_back(current_subcarrier);
+        }
+        // Остальные поднесущие используются для передачи данных
+        else {
+            data_indices.push_back(current_subcarrier);
         }
     }
+
+    for (int i = 0; i < total_active; ++i) {
+        int current_subcarrier = left_active + i;
+
+        // Пропускаем центральную поднесущую (DC)
+        if (current_subcarrier == middle_subcarrier) {
+            continue;
+        }
+
+        if      ((i > (total_active - 1) / 2) && 
+                 (i % pilot_interval == (shift + 1 + 3) % 6) && 
+                 pilot_indices_shifted.size() < N_PILOTS) {
+                 pilot_indices_shifted.push_back(current_subcarrier);
+        }
+        else if ((i < (total_active - 1) / 2) && 
+                 (i % pilot_interval == (shift +     3) % 6) && 
+                 pilot_indices_shifted.size() < N_PILOTS) {
+                 pilot_indices_shifted.push_back(current_subcarrier);
+        }
+        else {
+            data_indices_shifted.push_back(current_subcarrier);
+        }
+    }
+
+
 }
 
 // Последовательность Zadoff-Chu для PSS

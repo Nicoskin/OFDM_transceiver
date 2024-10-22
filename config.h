@@ -4,7 +4,7 @@
 // Параметры OFDM
 #define N_FFT 128
 #define G_SUBCAR 55
-#define N_PILOTS 6
+#define N_PILOTS 12
 #define CP_LEN 16
 
 #define IQ_MODULATION 2 // BPSK 1, QPSK 2, 16QAM 4, 64QAM 6
