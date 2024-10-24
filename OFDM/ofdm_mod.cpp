@@ -27,32 +27,31 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
     // Резервируем место для циклического префикса и символа
     mapped_pss.insert(mapped_pss.begin(), mapped_pss.end() - CP_LEN, mapped_pss.end());
 
+    uint16_t n_slot = 0;
     for (const auto &input_symbols : input_matrix) {
 
         // Вставка PSS перед каждым слотом из 5 символов OFDM
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());
         
-        // Каждый OFDM слот
-        for (size_t i = 0; i < input_symbols.size(); i += N_active_subcarriers * OFDM_SYM_IN_SLOT) {
+        for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
+            // input_symbols - данные на 1 символ
+            std::vector<cd> ofdm_symbol(input_symbols.begin() +  k      * (N_active_subcarriers-1),
+                                        input_symbols.begin() + (k + 1) * (N_active_subcarriers-1)+1); // +1 для включения последнего элемента
 
-            for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
-                // input_symbols - данные на 1 символ
-                std::vector<cd> ofdm_symbol(input_symbols.begin() + i +  k      * (N_active_subcarriers-1),
-                                            input_symbols.begin() + i + (k + 1) * (N_active_subcarriers-1)+1); // +1 для включения последнего элемента
+            ofdm_symbol = mapData(ofdm_symbol);
+            ofdm_symbol = mapPilots(ofdm_symbol, n_slot, k);
 
-                ofdm_symbol = mapToSubcarriers(ofdm_symbol);
+            ofdm_symbol = fftshift(ofdm_symbol);
 
-                ofdm_symbol = fftshift(ofdm_symbol);
+            auto time_domain_symbol = ifft(ofdm_symbol);
 
-                auto time_domain_symbol = ifft(ofdm_symbol);
+            // Добавление циклического префикса
+            std::vector<cd> cp(time_domain_symbol.end() - CP_LEN, time_domain_symbol.end());
+            cp.insert(cp.end(), time_domain_symbol.begin(), time_domain_symbol.end());
 
-                // Добавление циклического префикса
-                std::vector<cd> cp(time_domain_symbol.end() - CP_LEN, time_domain_symbol.end());
-                cp.insert(cp.end(), time_domain_symbol.begin(), time_domain_symbol.end());
-
-                output.insert(output.end(), cp.begin(), cp.end());
-            }
+            output.insert(output.end(), cp.begin(), cp.end());
         }
+        n_slot++;
 
     }
 
@@ -64,16 +63,63 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
     return output;
 }
 
-// Маппинг данных по поднесущим
-std::vector<cd> OFDM_mod::mapToSubcarriers(const std::vector<cd> &input) {
+std::vector<cd> OFDM_mod::mapPilots(const std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
     std::vector<cd> subcarriers(N_FFT, 0);
+    // std::cout << num_slot << std::endl;
 
     cd pilot_value(1, 1);
+    uint16_t N_cp = 0; // 1 normal CP | 0 extended CP 
+    uint16_t N_rb = pilot_indices.size() / 2;
+    uint16_t ns = num_slot;
+    uint16_t l = num_symbol;
+
+    // ns = 10 * floor(ns/10) + (ns % 2) // for frame structure type 3 when the CRS is part of a DRS
+
+    // 1/sqrt(2) * (1 - 2 * )
+    int c_init = pow(2, 10) * (7 * (ns+1) + l + 1)*(2 * N_CELL_ID + 1) + 2 * N_CELL_ID + N_cp;
+    std::cout << "c_init = " << c_init << std::endl;
+
+    int N_c = 1600;
+    int Mpn = 2* (2*N_rb) + 1;
+
+    std::vector<int8_t> x_1(N_c + Mpn + 31, 0);
+    x_1[0] = 1;
+    for (int n=0; n < N_c+Mpn; n++){
+        x_1[n+31] = (x_1[n+3] + x_1[n]) % 2;
+    }
+
+    std::vector<int8_t> x_2(N_c + Mpn + 31, 0);
+
+    for (int i = 0; i < 30; ++i) {
+        // Извлечение i-го бита из c_init
+        x_2[i] = (c_init >> i) & 1;
+    }
+
+    for (int n=0; n < N_c+Mpn; n++){
+        x_2[n+31] = (x_2[n+3] + x_2[n+2] + x_2[n+1] + x_1[n]) % 2;
+    }
+
+    std::vector<int8_t> c(Mpn, 0);
+    for (int n=0; n < Mpn; n++){
+        c[n] = (x_1[n+N_c] + x_2[n+N_c]) % 2;
+    }
+    for (auto o : c) std::cout << static_cast<int>(o) << " ";
+    std::cout << std::endl;
+
     
     // Расставляем пилоты по заранее известным индексам
     for (int pilot_index : pilot_indices) {
         subcarriers[pilot_index] = pilot_value;
     }
+
+    return subcarriers;
+}
+
+
+// Маппинг данных по поднесущим
+std::vector<cd> OFDM_mod::mapData(const std::vector<cd> &input) {
+    std::vector<cd> subcarriers(N_FFT, 0);
+
     // Расставляем данные по заранее известным индексам
     int data_index = 0;
     for (int data_pos : data_indices) {

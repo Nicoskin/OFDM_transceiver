@@ -7,8 +7,9 @@
 #include "../../Segmenter/segmenter.h"
 #include "../../OFDM/ofdm_mod.h"
 #include "../../OFDM/ofdm_demod.h"
+#include "../../File_converter/file_converter.h"
 
-// g++ test.cpp ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp -o test && ./test
+// g++ test.cpp  ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp -o test && ./test
 
 namespace {
     using cd = std::complex<double>;
@@ -49,15 +50,18 @@ std::vector<cd> add_noise(const std::vector<cd>& data, double snr, bool fixed_se
 
 int main() {
     // Входные биты
-    std::vector<uint8_t> bits = {
-    0,1,1,0,1,0,0,1, 1,0,0,1,0,1,1,0, 1,0,0,1,0,1,1,0,
-    1,0,0,1,0,1,1,0, 1,0,0,1,0,1,1,0,
-    0,1,1,0,1,0,0,1, 1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,}; 
+    // std::vector<uint8_t> bits = {
+    // 0,1,1,0,1,0,0,1, 1,0,0,1,0,1,1,0, 1,0,0,1,0,1,1,0,
+    // 1,0,0,1,0,1,1,0, 1,0,0,1,0,1,1,0,
+    // 0,1,1,0,1,0,0,1, 1,1,1,1,1,1,1,1,
+    // 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,}; 
+
+    auto bits = generateRandBits(500);
 
     // Сегментер
     Segmenter segmenter;
     auto segments = segmenter.segment(bits);
+    //std::cout << segments[0].size() << std::endl;
     segments = segmenter.scramble(segments);
 
     QAM_mod qam_mod; 
@@ -109,10 +113,10 @@ int main() {
     // auto corr = ofdm_demod.convolve(pss, pss);
     //std::cout << corr << std::endl;
     // Выводим результат
-    std::cout << "Corr Signal:\n";
-    for (const auto& symbol : corr) {
-        std::cout << symbol << ",\n";
-    }
+    // std::cout << "Corr Signal:\n";
+    // for (const auto& symbol : corr) {
+    //     std::cout << symbol << ",\n";
+    // }
     std::cout << std::endl;
 /*
     std::vector<int> out_bits = QAMDemod.softDecisionsToBits(softDecisions);

@@ -24,7 +24,8 @@ int main() {
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
 
-    auto qpsk_mod = modulate(segments, 2);
+    QAM_mod qam_mod;
+    auto qpsk_mod = qam_mod.modulate(segments, QPSK);
 
     OFDM_mod ofdm_mod;
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);

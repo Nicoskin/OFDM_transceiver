@@ -30,7 +30,8 @@ private:
     int N_active_subcarriers;
     void generateIndices();
 
-    std::vector<cd> mapToSubcarriers(const std::vector<cd> &input);
+    std::vector<cd> mapData(const std::vector<cd> &input);
+    std::vector<cd> mapPilots(const std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
 };
 
 #endif // OFDM_MOD_H
