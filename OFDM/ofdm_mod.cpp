@@ -7,10 +7,6 @@ namespace {
     using cd = std::complex<double>;
 }
 
-// std::cout << "ofdm_symbol" << std::endl;
-// for (const auto &val : ofdm_symbol) {
-//     std::cout << val << ",\n";
-// }
 
 OFDM_mod::OFDM_mod(){
     N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS -1; 
@@ -63,7 +59,7 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
     return output;
 }
 
-std::vector<cd> OFDM_mod::mapPilots(const std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
+std::vector<cd> OFDM_mod::mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
     std::vector<cd> subcarriers(N_FFT, 0);
     // std::cout << num_slot << std::endl;
 
@@ -76,7 +72,8 @@ std::vector<cd> OFDM_mod::mapPilots(const std::vector<cd> &input, uint16_t num_s
     // ns = 10 * floor(ns/10) + (ns % 2) // for frame structure type 3 when the CRS is part of a DRS
 
     // 1/sqrt(2) * (1 - 2 * )
-    int c_init = pow(2, 10) * (7 * (ns+1) + l + 1)*(2 * N_CELL_ID + 1) + 2 * N_CELL_ID + N_cp;
+    int N_cell = N_CELL_ID + 10;
+    int c_init = 1024 * (7 * (ns+1) + l + 1)*(2 * N_cell + 1) + 2 * N_cell + N_cp;
     std::cout << "c_init = " << c_init << std::endl;
 
     int N_c = 1600;
@@ -109,10 +106,10 @@ std::vector<cd> OFDM_mod::mapPilots(const std::vector<cd> &input, uint16_t num_s
     
     // Расставляем пилоты по заранее известным индексам
     for (int pilot_index : pilot_indices) {
-        subcarriers[pilot_index] = pilot_value;
+        input[pilot_index] = pilot_value;
     }
 
-    return subcarriers;
+    return input;
 }
 
 
@@ -123,16 +120,24 @@ std::vector<cd> OFDM_mod::mapData(const std::vector<cd> &input) {
     // Расставляем данные по заранее известным индексам
     int data_index = 0;
     for (int data_pos : data_indices) {
-        subcarriers[data_pos]    = input[data_index++];
+        subcarriers[data_pos] = input[data_index++];
     }
 
     return subcarriers;
 }
 
 // Маппинг PSS, ifft над PSS
+// root(u) = 0 1 2
 std::vector<cd> OFDM_mod::mapPSS(int u) {
     std::vector<cd> subcarriers(N_FFT, 0);
-    std::vector<cd> pss = ZadoffChu();
+    std::vector<cd> pss;
+    if (u == 0) {
+        pss = ZadoffChu(25);
+    } else if (u == 1) {
+        pss = ZadoffChu(29);
+    } else if (u == 2) {
+        pss = ZadoffChu(34);
+    }
 
     int left_active = (N_FFT / 2) - 31;
     

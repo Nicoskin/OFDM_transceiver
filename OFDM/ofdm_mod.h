@@ -20,7 +20,7 @@ public:
 
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
 
-    std::vector<cd> mapPSS(int u = 25);
+    std::vector<cd> mapPSS(int u = 0);
     std::vector<cd> ZadoffChu(int u = 25);
 
     std::vector<cd> mapSSS(int N_ID_cell);
@@ -31,7 +31,7 @@ private:
     void generateIndices();
 
     std::vector<cd> mapData(const std::vector<cd> &input);
-    std::vector<cd> mapPilots(const std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
+    std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
 };
 
 #endif // OFDM_MOD_H
