@@ -28,10 +28,9 @@ public:
 
 private:
     int N_active_subcarriers;
+    int N_rb;
+    std::vector<std::vector<std::vector<cd>>> refs;
     void generateIndices();
-    int N_rb = (N_FFT - G_SUBCAR - 1) / 12;
-    std::vector<std::vector<std::vector<cd>>> refs{20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0)))};
-    //std::vector<std::vector<std::vector<cd>>> refs;
 
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);

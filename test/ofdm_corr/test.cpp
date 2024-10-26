@@ -7,6 +7,7 @@
 #include "../../Segmenter/segmenter.h"
 #include "../../OFDM/ofdm_mod.h"
 #include "../../OFDM/ofdm_demod.h"
+#include "../../OFDM/sequence.h"
 #include "../../File_converter/file_converter.h"
 
 // g++ test.cpp  ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp -o test && ./test

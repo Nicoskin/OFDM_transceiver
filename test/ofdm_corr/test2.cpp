@@ -10,7 +10,7 @@
 #include "../../OFDM/sequence.h"
 #include "../../File_converter/file_converter.h"
 
-// g++ test2.cpp ../../File_converter/file_converter.cpp ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp -o test && ./test
+// g++ test2.cpp  ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp -o test && ./test
 
 namespace {
     using cd = std::complex<double>;
@@ -21,7 +21,7 @@ namespace {
 int main() {
     // Сегментер
     Segmenter segmenter;
-    auto bits = generateRandBits(500);
+    auto bits = generateRandBits(500, 1);
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
 

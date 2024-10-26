@@ -9,12 +9,12 @@ namespace {
 }
 
 
-OFDM_mod::OFDM_mod(){
+OFDM_mod::OFDM_mod()
+    : N_rb((N_FFT - G_SUBCAR - 1) / 12), // Инициализация N_rb
+      refs(20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0)))) // Инициализация refs
+{
     N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS -1; 
     generateIndices();  // Генерируем индексы данных и пилотов при инициализации
-
-    //int N_rb = (N_FFT - G_SUBCAR - 1) / 12;
-    //std::vector<std::vector<std::vector<cd>>> refs{20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0)))};
     gen_pilots_siq(pilot_indices, refs);
 };
 
@@ -136,14 +136,12 @@ void OFDM_mod::generateIndices() {
 
 
 std::vector<cd> OFDM_mod::mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
-    std::vector<cd> subcarriers(N_FFT, 0);
-    // std::cout << num_slot << std::endl;
 
     std::vector<cd> pilots_val = refs[num_slot][num_symbol];
-    for(auto i : pilots_val) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
+    // for(auto i : pilots_val) {
+    //     std::cout << i << " ";
+    // }
+    // std::cout << std::endl;
     
     uint16_t k = 0;
     for (int pilot_index : pilot_indices) {
