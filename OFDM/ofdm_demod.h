@@ -29,4 +29,6 @@ private:
     
 };
 
+std::vector<double> correlation(const std::vector<std::complex<double>>& y1, const std::vector<std::complex<double>>& y2);
+
 #endif // OFDM_MOD_H

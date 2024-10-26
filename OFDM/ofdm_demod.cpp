@@ -218,32 +218,34 @@ int findMaxCorrelationIndex(const std::vector<std::complex<double>>& data) {
 */
 
 // Функция для вычисления взаимной корреляции между двумя векторами
-std::vector<double> cross_correlation(const std::vector<std::complex<double>>& y1, 
-                                      const std::vector<std::complex<double>>& y2) {
-    int size1 = y1.size();
-    int size2 = y2.size();
-    
-    // Массив для хранения значений корреляции
-    std::vector<double> cc(size1, 0.0);
+std::vector<double> correlation(const std::vector<std::complex<double>>& y1, const std::vector<std::complex<double>>& y2) {
+    size_t len1 = y1.size();
+    size_t len2 = y2.size();
+    size_t maxShift = len1 - len2 + 1;  // Максимальный сдвиг для корреляции
+    std::vector<double> result(maxShift, 0.0);
 
-    // Проходим по всем сдвигам второго вектора относительно первого
-    for (int n = 0; n < size1; ++n) {
-        std::complex<double> numerator = 0.0;
-        double norm_y1 = 0.0;
-        double norm_y2 = 0.0;
+    // Предварительные вычисления нормировочных коэффициентов
+    double normY2 = 0.0;
+    for (const auto& v : y2) {
+        normY2 += std::norm(v);
+    }
+    normY2 = std::sqrt(normY2);
 
-        // Вычисляем корреляцию для каждого сдвига
-        for (int m = 0; m < size2; ++m) {
-            if (n + m < size1) {
-                numerator += y1[n + m] * std::conj(y2[m]);  // числитель
-                norm_y1 += std::norm(y1[n + m]);           // норма вектора y1
-                norm_y2 += std::norm(y2[m]);               // норма вектора y2
-            }
+    // Цикл по сдвигам
+    for (size_t shift = 0; shift < maxShift; ++shift) {
+        std::complex<double> sum(0.0, 0.0);
+        double normY1 = 0.0;
+
+        // Вычисление корреляции на текущем сдвиге
+        for (size_t i = 0; i < len2; ++i) {
+            sum += y1[i + shift] * std::conj(y2[i]);
+            normY1 += std::norm(y1[i + shift]);
         }
 
-        // Нормализуем результат для текущего сдвига
-        cc[n] = std::abs(numerator) / (std::sqrt(norm_y1) * std::sqrt(norm_y2));
+        // Нормирование
+        double normFactor = std::sqrt(normY1) * normY2;
+        result[shift] = std::abs(sum) / normFactor;
     }
 
-    return cc;
+    return result;
 }

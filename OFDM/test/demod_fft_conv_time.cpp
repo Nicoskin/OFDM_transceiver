@@ -1,5 +1,6 @@
 ﻿#include "../ofdm_demod.h"
 #include "../ofdm_mod.h"
+#include "../sequence.h"
 #include "../fft/fft.h"
 #include <iostream>
 #include <vector>
@@ -13,46 +14,46 @@ int main() {
     OFDM_demod OFDM_demod;
 
     // Создание массива из 1 миллиона значений
-    std::vector<std::complex<double>> large_vec(16);
+    std::vector<std::complex<double>> large_vec(30000);
     for (size_t i = 0; i < large_vec.size(); ++i) {
         large_vec[i] = {static_cast<double>(i % 100), static_cast<double>(i % 100)};
     }
 
     // Создание массива из 10 значений
-    std::vector<std::complex<double>> small_vec(16);
-    // OFDM_mod ofdm_mod;
-    // auto small_vec = ofdm_mod.mapPSS();
+    //std::vector<std::complex<double>> small_vec(16);
+    OFDM_mod ofdm_mod;
+    auto small_vec = ofdm_mod.mapPSS();
     for (size_t i = 0; i < small_vec.size(); ++i) {
         small_vec[i] = {static_cast<double>(i % 100), static_cast<double>(i % 100)};
     }
 
     // Тестирование функции convolve
     auto start_convolve = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < 10000; ++i) {
-        auto convolved = OFDM_demod.convolve(large_vec, small_vec);
-    }
+    auto convolved = OFDM_demod.convolve(large_vec, small_vec);
     auto end_convolve = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_convolve = end_convolve - start_convolve;
 
     // Тестирование функции correlate_with_shift
     auto start_correlate = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < 10000; ++i) {
     auto corr = OFDM_demod.correlateShifted(large_vec, small_vec, true);
-    }
     auto end_correlate = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_correlate = end_correlate - start_correlate;
 
     auto start_corr = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < 10000; ++i) {
     auto correlate_norm = OFDM_demod.correlate(large_vec, small_vec, false);
-    }
     auto end_corr = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration_corre = end_corr - start_corr;
+
+    auto start_cross_corr = std::chrono::high_resolution_clock::now();
+    auto cross_correlate_norm = correlation(large_vec, small_vec);
+    auto end_cross_corr = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration_cross_corre = end_corr - start_corr;
 
     // Печать результатов
     std::cout << "Convolution took : " << duration_convolve.count() << " seconds." << std::endl;
     std::cout << "Correlation took : " << duration_correlate.count() << " seconds." << std::endl;
     std::cout << "Correlation norm : " << duration_corre.count() << " seconds." << std::endl;
+    std::cout << "Cross corr  norm : " << duration_cross_corre.count() << " seconds." << std::endl;
 
     return 0;
 }
