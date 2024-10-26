@@ -6,10 +6,12 @@
 #include <cmath>
 #include <algorithm>
 #include "../config.h"
+#include "sequence.h"
+
+using cd = std::complex<double>;
 
 class OFDM_mod {
 public:
-    using cd = std::complex<double>;
     OFDM_mod();
 
     std::vector<int> data_indices;
@@ -21,17 +23,18 @@ public:
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
 
     std::vector<cd> mapPSS(int u = 0);
-    std::vector<cd> ZadoffChu(int u = 25);
 
     std::vector<cd> mapSSS(int N_ID_cell);
-    std::vector<cd> generate_sss(int N_ID_cell);
 
 private:
     int N_active_subcarriers;
     void generateIndices();
+    int N_rb = (N_FFT - G_SUBCAR - 1) / 12;
+    std::vector<std::vector<std::vector<cd>>> refs{20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0)))};
+    //std::vector<std::vector<std::vector<cd>>> refs;
 
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
 };
 
-#endif // OFDM_MOD_H
+ #endif // OFDM_MOD_H
