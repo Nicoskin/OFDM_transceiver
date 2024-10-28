@@ -39,6 +39,16 @@ void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vect
             for (size_t i = 0; i < num_pilots; i++) {
                 c[ns][l][i] = (x_1[i + N_c] + x_2[i + N_c]) % 2;
             }
+            // std::cout << "ns = " << ns << "   l = " << l << std::endl;
+            // std::cout << "c_init = " << c_init << "   cell.id = " << N_cell << std::endl;
+
+
+            // for (size_t i = 0; i < num_pilots; i++) {
+            //     std::cout << c[ns][l][i] << " ";
+            // }
+            // std::cout << std::endl;
+            
+            
         }
     }
 
@@ -60,7 +70,7 @@ void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vect
     //     for (size_t l = 0; l < num_symbols; l++) {
     //         std::cout << "refs[" << ns << "][" << l << "]: ";
     //         for (size_t i = 0; i < num_pilots; i++) {
-    //             std::cout << refs[ns][l][i] << " ";
+    //             std::cout << c[ns][l][i] << " ";
     //         }
     //         std::cout << std::endl;
     //     }

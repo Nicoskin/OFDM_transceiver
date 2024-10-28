@@ -17,7 +17,7 @@
 #define CRC_BITS 16
 
 
-#define N_CELL_ID 0
+#define N_CELL_ID 1
 
 
 #endif //CONFIG_H
