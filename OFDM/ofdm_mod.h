@@ -29,6 +29,7 @@ public:
 private:
     int N_active_subcarriers;
     int N_rb;
+    int CP_len;
     std::vector<std::vector<std::vector<cd>>> refs;
     void generateIndices();
 

@@ -10,7 +10,7 @@ void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vect
     // Изменяем размер матрицы c на 20x7x(pilot_indices.size())
     std::vector<std::vector<std::vector<int32_t>>> c(num_slots, std::vector<std::vector<int32_t>>(num_symbols, std::vector<int32_t>(num_pilots*2, 0)));
 
-    uint16_t N_cp = 0; // 1 - normal CP, 0 - extended CP 
+    uint16_t N_cp = 1; // 1 - normal CP, 0 - extended CP 
     uint16_t N_rb = num_pilots / 2;
     int N_cell = N_CELL_ID; 
 
@@ -32,22 +32,20 @@ void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vect
                 x_2[i] = (c_init >> i) & 1;
             }
             for (int n = 0; n < N_c + Mpn; n++) {
-                x_2[n + 31] = (x_2[n + 3] + x_2[n + 2] + x_2[n + 1] + x_1[n]) % 2;
+                x_2[n + 31] = (x_2[n + 3] + x_2[n + 2] + x_2[n + 1] + x_2[n]) % 2;
             }
 
             // Заполнение c[ns][l][i] значениями
-            for (size_t i = 0; i < num_pilots; i++) {
+            for (size_t i = 0; i < num_pilots * 2; i++) {
                 c[ns][l][i] = (x_1[i + N_c] + x_2[i + N_c]) % 2;
             }
+
             // std::cout << "ns = " << ns << "   l = " << l << std::endl;
             // std::cout << "c_init = " << c_init << "   cell.id = " << N_cell << std::endl;
-
-
-            // for (size_t i = 0; i < num_pilots; i++) {
+            // for (size_t i = 0; i < num_pilots * 2; i++) {
             //     std::cout << c[ns][l][i] << " ";
             // }
             // std::cout << std::endl;
-            
             
         }
     }

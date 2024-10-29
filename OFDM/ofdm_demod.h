@@ -13,6 +13,10 @@ using cd = std::complex<double>;
 
 class OFDM_demod {
 public:
+    OFDM_demod();
+
+    int CP_len;
+
     std::vector<cd> convolve(const std::vector<cd>& vec1, const std::vector<cd>& vec2);
 
     cd correlateStatic(const std::vector<cd>& vec1, const std::vector<cd>& vec2, bool norm = false);
@@ -25,7 +29,6 @@ public:
 
 
 private:
-    int N_active_subcarriers;
     
 };
 

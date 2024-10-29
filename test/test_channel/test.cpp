@@ -81,7 +81,7 @@ void saveCorr(const std::vector<double>& corr, const std::string& filename) {
 int main() {
 
     Segmenter segmenter;
-    auto bits = generateRandBits(500, 1);
+    auto bits = generateRandBits(500, 2);
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
 
@@ -117,7 +117,7 @@ int main() {
                 std::cout << "indexs_pss: " << i << std::endl;
             }
 
-
+    OFDM_demod ofdm_demod;
     // Делим сигнал на слоты по индексам
     std::vector<double> corr;
     for (size_t i = 0; i < indexs_pss.size(); ++i) {
@@ -130,8 +130,9 @@ int main() {
         auto indexs_cp = find_max_cp(corr_cp_arr);
 
                 std::cout << "corr_cp_arr.size(): " << corr_cp_arr.size() << std::endl;
-                for(auto  ind : indexs_cp) {
-                    std::cout << "indexs_cp: " << ind << std::endl;
+                std::cout << "CP_len: " << ofdm_demod.CP_len << std::endl;
+                for(size_t k = 0; k < indexs_cp.size(); ++k) {
+                    std::cout << "indexs_cp: " << indexs_cp[k] /*- (N_FFT + ofdm_demod.CP_len)*k*/ << std::endl;
                 }
         corr = corr_cp_arr;
     }

@@ -16,6 +16,9 @@ OFDM_mod::OFDM_mod()
     N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS -1; 
     generateIndices();  // Генерируем индексы данных и пилотов при инициализации
     gen_pilots_siq(pilot_indices, refs);
+    
+    if (CP_LEN == 0) CP_len = N_FFT / 12.8;
+    else CP_len = N_FFT / 4;
 };
 
 
@@ -30,12 +33,12 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
 
     uint16_t n_slot = 0;
     for (const auto &input_symbols : input_matrix) {
+        // input_symbols - данные на 1 символ
 
         // Вставка PSS перед каждым слотом из 5 символов OFDM
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());
         
         for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
-            // input_symbols - данные на 1 символ
             std::vector<cd> ofdm_symbol(input_symbols.begin() +  k      * (N_active_subcarriers-1),
                                         input_symbols.begin() + (k + 1) * (N_active_subcarriers-1)+1); // +1 для включения последнего элемента
 
@@ -47,7 +50,17 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
             auto time_domain_symbol = ifft(ofdm_symbol);
 
             // Добавление циклического префикса
-            std::vector<cd> cp(time_domain_symbol.end() - CP_LEN, time_domain_symbol.end());
+            std::vector<cd> cp;
+            if (CP_LEN == 0) {
+                if (k == 0) {
+                    cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
+                } else {
+                    cp.assign(time_domain_symbol.end() - CP_len*0.9, time_domain_symbol.end());
+                }
+
+            } else {
+                cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
+            }
             cp.insert(cp.end(), time_domain_symbol.begin(), time_domain_symbol.end());
 
             output.insert(output.end(), cp.begin(), cp.end());
@@ -138,6 +151,7 @@ void OFDM_mod::generateIndices() {
 std::vector<cd> OFDM_mod::mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
 
     std::vector<cd> pilots_val = refs[num_slot][num_symbol];
+    // std::cout << "num_slot = " << num_slot << "  num_symbol = " << num_symbol <<  std::endl;
     // for(auto i : pilots_val) {
     //     std::cout << i << " ";
     // }
