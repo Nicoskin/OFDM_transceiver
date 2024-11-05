@@ -1,37 +1,39 @@
 ﻿#include "file_converter.h"
 
+#include <iostream>
+
 
 namespace fs = std::filesystem;
 
-std::vector<uint8_t> file2bits(const std::string& filePath, std::string& fileName) {
+std::vector<uint8_t> file2bits(const std::string& filePath) {
     std::ifstream inputFile(filePath, std::ios::binary);
     if (!inputFile) {
         throw std::runtime_error("Failed to open file for reading: " + filePath);
     }
 
-    // Get file name and extension
-    fileName = fs::path(filePath).filename().string();
+    // Получить имя файла и расширение
+    std::string fileName = fs::path(filePath).filename().string();
 
-    // Read the file into a vector of bytes
+    // Считать файл в вектор байтов
     std::vector<uint8_t> fileData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
 
-    // Convert bytes to bits
+    // Преобразовать байты в биты
     std::vector<uint8_t> bits;
 
-    // Add the length of the file name as the first 8 bits
+    // Добавить длину имени файла как первые 8 битов
     uint8_t fileNameLength = static_cast<uint8_t>(fileName.size());
     for (int i = 7; i >= 0; --i) {
         bits.push_back((fileNameLength >> i) & 1);
     }
 
-    // Add the file name as bits
+    // Добавить имя файла в виде битов
     for (const auto& ch : fileName) {
         for (int i = 7; i >= 0; --i) {
             bits.push_back((ch >> i) & 1);
         }
     }
 
-    // Add the file data as bits
+    // Добавить данные файла в виде битов
     for (const auto& byte : fileData) {
         for (int i = 7; i >= 0; --i) {
             bits.push_back((byte >> i) & 1);
@@ -41,7 +43,7 @@ std::vector<uint8_t> file2bits(const std::string& filePath, std::string& fileNam
     return bits;
 }
 
-void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits, std::string& fileName) {
+void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits) {
     if (bits.size() < 8) {
         throw std::runtime_error("Invalid bits data");
     }
@@ -57,7 +59,7 @@ void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits, s
     }
 
     // Extract the file name
-    fileName.clear();
+    std::string fileName;
     for (int i = 8; i < 8 + fileNameLength * 8; i += 8) {
         uint8_t ch = 0;
         for (int j = 0; j < 8; ++j) {

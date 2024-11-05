@@ -10,8 +10,8 @@
 #include <filesystem>
 #include <random>
 
-std::vector<uint8_t> file2bits(const std::string& filePath, std::string& fileName);
-void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits, std::string& fileName);
+std::vector<uint8_t> file2bits(const std::string& filePath);
+void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits);
 
 std::vector<uint8_t> generateRandBits(size_t n, unsigned int seed = 0);
 

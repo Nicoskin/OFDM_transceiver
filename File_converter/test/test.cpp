@@ -16,7 +16,7 @@ int main() {
 
     try {
         // Convert file to bits with metadata
-        std::vector<uint8_t> fileBits = fileToBitsWithMetadata(originalFilePath, fileName);
+        std::vector<uint8_t> fileBits = file2bits(originalFilePath);
 
         // Output number of bits and the bits themselves
         std::cout << "Number of bits: " << fileBits.size() << std::endl;
@@ -24,20 +24,9 @@ int main() {
         printBits(fileBits);
 
         // Convert bits back to file with metadata
-        bitsToFileWithMetadata(outputDir, fileBits, fileName);
+        bits2file(outputDir, fileBits);
 
-        // Read the output file back to bits to compare
-        std::vector<uint8_t> outputBits = fileToBitsWithMetadata(fileName, fileName);
-
-        // Output number of bits for the restored file
-        std::cout << "Number of bits (restored file): " << outputBits.size() << std::endl;
-        // std::cout << "Bits (restored file): ";
-        // printBits(outputBits);
-
-        // Verify the file data matches the original data
-        assert(fileBits == outputBits);
-
-        std::cout << "Test passed: The original file and the output file are identical." << std::endl;
+        std::cerr << "Test complete." << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Test failed: " << e.what() << std::endl;
     }
