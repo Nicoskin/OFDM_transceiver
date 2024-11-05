@@ -1,8 +1,9 @@
 ﻿#include "../ofdm_mod.h"
 #include "../fft/fft.h"
+#include "../sequence.h"
 #include <iostream>
 
-// g++ pilots.cpp ../ofdm_mod.cpp ../fft/fft.cpp -o test && ./test
+// g++ pilots.cpp ../ofdm_mod.cpp ../fft/fft.cpp ../sequence.cpp -o test && ./test
 
 int main(){
     OFDM_mod OFDM_mod;

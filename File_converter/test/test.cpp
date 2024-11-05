@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cassert>
 
+// g++ test.cpp ../file_converter.cpp -o test && ./test
+
 void printBits(const std::vector<uint8_t>& bits) {
     for (const auto& bit : bits) {
         std::cout << static_cast<int>(bit);

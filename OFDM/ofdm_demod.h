@@ -35,7 +35,10 @@ private:
 std::vector<double> correlation(const std::vector<std::complex<double>>& y1, const std::vector<std::complex<double>>& y2);
 std::vector<int> find_indexs_pss(std::vector<double> corr, float threshold = 0.97);
 std::vector<cd> extract_slots(const std::vector<cd>& signal, const std::vector<int>& indices, int slot_number);
+std::vector<cd> extract_symb(const std::vector<cd>& signal, const std::vector<int>& indices, int n_symb);
 std::vector<double> corr_cp(const std::vector<cd>& slot_signal);
 std::vector<int> find_max_cp(const std::vector<double>& corr_cp);
+
+std::vector<cd> interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb);
 
 #endif // OFDM_MOD_H

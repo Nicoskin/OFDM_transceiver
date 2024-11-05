@@ -29,7 +29,7 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
 
     auto mapped_pss = mapPSS();
     // Резервируем место для циклического префикса и символа
-    mapped_pss.insert(mapped_pss.begin(), mapped_pss.end() - CP_LEN, mapped_pss.end());
+    mapped_pss.insert(mapped_pss.begin(), mapped_pss.end() - CP_len, mapped_pss.end());
 
     uint16_t n_slot = 0;
     for (const auto &input_symbols : input_matrix) {

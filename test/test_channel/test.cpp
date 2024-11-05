@@ -35,7 +35,12 @@ std::vector<cd> generate_noise(const std::vector<cd>& signal, double SNR_dB, uns
     double noise_variance = std::pow(An, 2) / 2.0;
 
     // Настройка генератора случайных чисел с нормальным распределением и заданным seed
-    std::default_random_engine generator(seed);
+    std::default_random_engine generator;
+    if (seed != 0) {
+        generator.seed(seed);
+    } else {
+        generator.seed(std::random_device{}());
+    }
     std::normal_distribution<double> distribution(0.0, std::sqrt(noise_variance));
 
     // Генерируем шум
@@ -94,6 +99,7 @@ int main() {
     double SNR_dB = 10.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
     auto noise = generate_noise(signal, SNR_dB, 1);
+    std::cout << "noise " << noise[0] << std::endl;
     std::vector<cd> noise_signal;
     for (int i = 0; i < signal.size(); ++i) {
         noise_signal.push_back(signal[i] + noise[i]);
@@ -121,11 +127,11 @@ int main() {
     // Делим сигнал на слоты по индексам
     std::vector<double> corr;
     for (size_t i = 0; i < indexs_pss.size(); ++i) {
-        auto only_signal =  extract_slots(noise_signal, indexs_pss, i);
-                std::cout << only_signal.size() << std::endl;
+        auto one_slot =  extract_slots(noise_signal, indexs_pss, i);
+                std::cout << one_slot.size() << std::endl;
         
         // Корреляция по CP в слоте
-        auto corr_cp_arr = corr_cp(only_signal);
+        auto corr_cp_arr = corr_cp(one_slot);
         // Находим индексы начала CP каждого символа
         auto indexs_cp = find_max_cp(corr_cp_arr);
 
@@ -134,6 +140,12 @@ int main() {
                 for(size_t k = 0; k < indexs_cp.size(); ++k) {
                     std::cout << "indexs_cp: " << indexs_cp[k] /*- (N_FFT + ofdm_demod.CP_len)*k*/ << std::endl;
                 }
+        
+        for(size_t k = 0; k < OFDM_SYM_IN_SLOT; k++){
+            auto one_symb = extract_symb(one_slot, indexs_cp, k);
+            auto inter_H = interpolated_H(one_symb, i, k);
+        }
+        
         corr = corr_cp_arr;
     }
     

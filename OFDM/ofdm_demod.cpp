@@ -408,3 +408,62 @@ std::vector<int> find_max_cp(const std::vector<double>& corr_cp) {
 
     return indices;
 }
+
+std::vector<cd> extract_symb(const std::vector<cd>& signal, const std::vector<int>& indices, int n_symb) {
+    // Проверка валидности slot_number
+    if (n_symb >= indices.size()) {
+        throw std::out_of_range("Неверный номер слота");
+    }
+    int CP_len;
+    if ((CP_LEN == 0)&&(n_symb == 0)) CP_len = N_FFT / 12.8;
+    else if (CP_LEN == 0) CP_len = N_FFT / 12.8 * 0.9;
+    else CP_len = N_FFT / 4;
+
+    int start_index = indices[n_symb] + CP_len;
+    int end_index = start_index + N_FFT;
+    //std::cout << start_index << " " << end_index << std::endl;
+
+    // Проверка валидности индексов
+    if (end_index > signal.size()) {
+        throw std::out_of_range("Диапазон превышает размер вектора сигнала");
+    }
+
+    // Возврат части сигнала
+    return std::vector<cd>(signal.begin() + start_index, signal.begin() + end_index);
+}
+
+std::vector<cd> interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb) {
+    std::vector<cd> H_channel(N_PILOTS);
+    std::vector<cd> interpolated_signal(N_FFT);
+    OFDM_mod ofdm_mod;
+
+    std::vector<int> pilots_ind = ofdm_mod.pilot_indices;
+    auto pilot_val = ofdm_mod.getRefs()[n_slot][n_symb];
+
+    // Заполняем значения пилотов
+    int k = 0;
+    for (int idx : pilots_ind) {
+        H_channel[k++] = signal[idx] / pilot_val[k];
+    }
+
+    // Интерполяция между значениями пилотов
+    for (size_t i = 0; i < pilots_ind.size() - 1; ++i) {
+        int start_idx = G_SUBCAR / 2 + 1;
+        int end_idx = N_FFT - G_SUBCAR / 2;
+        cd start_val = signal[start_idx];
+        cd end_val = signal[end_idx];
+        
+        for (int j = start_idx + 1; j < end_idx; ++j) {
+            double alpha = static_cast<double>(j - start_idx) / (end_idx - start_idx);
+            interpolated_signal[j] = start_val * (1.0 - alpha) + end_val * alpha;
+        }
+    }
+    for(auto symb : interpolated_signal) {
+        std::cout << symb << "\n";
+    }
+    std::cout << "-------------------\n";
+
+
+    return interpolated_signal;
+
+}

@@ -26,6 +26,8 @@ public:
 
     std::vector<cd> mapSSS(int N_ID_cell);
 
+    const std::vector<std::vector<std::vector<cd>>>& getRefs() const { return refs; }
+
 private:
     int N_active_subcarriers;
     int N_rb;
