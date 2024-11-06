@@ -440,30 +440,39 @@ std::vector<cd> interpolated_H(const std::vector<cd>& signal, int n_slot, int n_
     std::vector<int> pilots_ind = ofdm_mod.pilot_indices;
     auto pilot_val = ofdm_mod.getRefs()[n_slot][n_symb];
 
-    // Заполняем значения пилотов
+    // Fill pilot values
     int k = 0;
     for (int idx : pilots_ind) {
         H_channel[k++] = signal[idx] / pilot_val[k];
+        interpolated_signal[idx] = H_channel[k - 1];  // Place the interpolated pilot value directly
     }
 
-    // Интерполяция между значениями пилотов
+    // Interpolate between each consecutive pair of pilot values within the range
+    int end_range = N_FFT - G_SUBCAR / 2;
     for (size_t i = 0; i < pilots_ind.size() - 1; ++i) {
-        int start_idx = G_SUBCAR / 2 + 1;
-        int end_idx = N_FFT - G_SUBCAR / 2;
-        cd start_val = signal[start_idx];
-        cd end_val = signal[end_idx];
-        
+        int start_idx = pilots_ind[i];
+        int end_idx = std::min(pilots_ind[i + 1], end_range);  // Ensure end_idx doesn't exceed the range
+        cd start_val = interpolated_signal[start_idx];
+        cd end_val = interpolated_signal[end_idx];
+
         for (int j = start_idx + 1; j < end_idx; ++j) {
             double alpha = static_cast<double>(j - start_idx) / (end_idx - start_idx);
             interpolated_signal[j] = start_val * (1.0 - alpha) + end_val * alpha;
         }
     }
-    for(auto symb : interpolated_signal) {
-        std::cout << symb << "\n";
+
+    // Extend interpolation up to end_range if needed
+    int last_pilot = pilots_ind.back();
+    cd last_val = interpolated_signal[last_pilot];
+    for (int j = last_pilot + 1; j < end_range; ++j) {
+        interpolated_signal[j] = last_val;
+    }
+
+    // Output for debug
+    for (auto symb : H_channel) {
+        std::cout << symb << ",\n";
     }
     std::cout << "-------------------\n";
 
-
     return interpolated_signal;
-
 }

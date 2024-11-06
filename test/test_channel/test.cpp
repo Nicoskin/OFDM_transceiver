@@ -11,6 +11,7 @@
 #include "../../OFDM/ofdm_mod.h"
 #include "../../OFDM/ofdm_demod.h"
 #include "../../OFDM/sequence.h"
+#include "../../OFDM/fft/fft.h"
 #include "../../File_converter/file_converter.h"
 
 using cd = std::complex<double>;
@@ -71,14 +72,26 @@ std::vector<std::complex<double>> pad_zeros(const std::vector<std::complex<doubl
     return padded_signal;
 }
 
-void saveCorr(const std::vector<double>& corr, const std::string& filename) {
+void saveD(const std::vector<double>& arr, const std::string& filename) {
     std::ofstream outFile(filename);
     if (!outFile.is_open()) {
         std::cerr << "Не удалось открыть файл для записи." << std::endl;
         return;
     }
 
-    for (const auto& value : corr) {
+    for (const auto& value : arr) {
+        outFile << value << "\n";
+    }
+}
+
+void saveCD(const std::vector<cd>& arr, const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Не удалось открыть файл для записи." << std::endl;
+        return;
+    }
+
+    for (const auto& value : arr) {
         outFile << value << "\n";
     }
 }
@@ -118,7 +131,7 @@ int main() {
             std::cout << "Max corr pss: " << maxi << std::endl;
 
     // Находим индексы PSS
-    auto indexs_pss = find_indexs_pss(corr_pss, 0.95);
+    auto indexs_pss = find_indexs_pss(corr_pss, 0.90);
             for (auto i : indexs_pss) {
                 std::cout << "indexs_pss: " << i << std::endl;
             }
@@ -143,7 +156,17 @@ int main() {
         
         for(size_t k = 0; k < OFDM_SYM_IN_SLOT; k++){
             auto one_symb = extract_symb(one_slot, indexs_cp, k);
-            auto inter_H = interpolated_H(one_symb, i, k);
+
+            auto one_symb_freq = fft(one_symb);
+            one_symb_freq = fftshift(one_symb_freq);
+            auto inter_H = interpolated_H(one_symb_freq, i, k);
+            for(int k_s = 0; k_s < N_FFT; k_s++){
+                one_symb_freq[k_s] = one_symb_freq[k_s] / inter_H[k_s];
+            }
+            if (k == 0) {
+                saveCD(inter_H, "out.txt"); 
+            }
+            
         }
         
         corr = corr_cp_arr;
@@ -157,8 +180,8 @@ int main() {
 
     
 
-    std::string outputFile = "out.txt";
-    saveCorr(corr, outputFile);
+    // std::string outputFile = "out.txt";
+    // saveCorr(corr, outputFile);
 
     return 0;
 }
