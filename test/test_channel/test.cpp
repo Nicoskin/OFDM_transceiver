@@ -118,70 +118,9 @@ int main() {
         noise_signal.push_back(signal[i] + noise[i]);
     }
 
-    // Работа с буффером
-
-    // Корреляция с PSS
-    auto pss = ofdm_mod.mapPSS(0);
-    auto corr_pss = correlation(noise_signal, pss);
-
-            float maxi = 0;
-            for (int i = 0; i < corr_pss.size(); ++i) {
-                if (corr_pss[i] > maxi) maxi = corr_pss[i];
-            }
-            std::cout << "Max corr pss: " << maxi << std::endl;
-
-    // Находим индексы PSS
-    auto indexs_pss = find_indexs_pss(corr_pss, 0.90);
-            for (auto i : indexs_pss) {
-                std::cout << "indexs_pss: " << i << std::endl;
-            }
-
     OFDM_demod ofdm_demod;
-    // Делим сигнал на слоты по индексам
-    std::vector<double> corr;
-    for (size_t i = 0; i < indexs_pss.size(); ++i) {
-        auto one_slot =  extract_slots(noise_signal, indexs_pss, i);
-                std::cout << one_slot.size() << std::endl;
-        
-        // Корреляция по CP в слоте
-        auto corr_cp_arr = corr_cp(one_slot);
-        // Находим индексы начала CP каждого символа
-        auto indexs_cp = find_max_cp(corr_cp_arr);
-
-                std::cout << "corr_cp_arr.size(): " << corr_cp_arr.size() << std::endl;
-                std::cout << "CP_len: " << ofdm_demod.CP_len << std::endl;
-                for(size_t k = 0; k < indexs_cp.size(); ++k) {
-                    std::cout << "indexs_cp: " << indexs_cp[k] /*- (N_FFT + ofdm_demod.CP_len)*k*/ << std::endl;
-                }
-        
-        for(size_t k = 0; k < OFDM_SYM_IN_SLOT; k++){
-            auto one_symb = extract_symb(one_slot, indexs_cp, k);
-
-            auto one_symb_freq = fft(one_symb);
-            one_symb_freq = fftshift(one_symb_freq);
-            auto inter_H = interpolated_H(one_symb_freq, i, k);
-            for(int k_s = 0; k_s < N_FFT; k_s++){
-                one_symb_freq[k_s] = one_symb_freq[k_s] / inter_H[k_s];
-            }
-            if (k == 0) {
-                saveCD(inter_H, "out.txt"); 
-            }
-            
-        }
-        
-        corr = corr_cp_arr;
-    }
-    
-
-    
-    // for (auto i : index_cp) {
-    //     std::cout << i << std::endl;
-    // }
-
-    
-
-    // std::string outputFile = "out.txt";
-    // saveCorr(corr, outputFile);
+    auto demod_signal = ofdm_demod.demodulate(noise_signal);
+    saveCD(qpsk_mod[0], "qpsk.txt");
 
     return 0;
 }
