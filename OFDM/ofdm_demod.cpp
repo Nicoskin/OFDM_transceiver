@@ -20,8 +20,13 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     auto pss = ofdm_mod.mapPSS(0);
     auto corr_pss = correlation(signal, pss);
     auto data_indices = ofdm_mod.data_indices;
+            float maxi = 0;
+            for (int i = 0; i < corr_pss.size(); ++i) {
+                if (corr_pss[i] > maxi) maxi = corr_pss[i];
+            }
+            std::cout << "Max corr pss: " << maxi << std::endl;
 
-    auto indexs_pss = find_indexs_pss(corr_pss, 0.90);
+    auto indexs_pss = find_indexs_pss(corr_pss, 0.87);
 
     // Цикл по каждому слоту
     for (size_t n_slot = 0; n_slot < indexs_pss.size(); ++n_slot) {

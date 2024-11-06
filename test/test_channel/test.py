@@ -11,8 +11,9 @@ def load_complex_numbers(filename):
     complex_array = np.array([complex(float(real), float(imag)) for real, imag in lines])
     return complex_array
 
-complex_array = load_complex_numbers("dem_sig.txt")[:15]
-complex_array_qpsk = load_complex_numbers("qpsk.txt")[:15]
+complex_array = load_complex_numbers("dem_sig.txt")
+complex_array_qpsk = load_complex_numbers("qpsk.txt")
+signal = load_complex_numbers("signal.txt")
 #complex_array = complex_array[28:101]
 
 # Plot the complex array
@@ -24,6 +25,8 @@ plt.legend()
 
 ml.cool_plot(complex_array_qpsk.real, complex_array_qpsk.imag, title="TX QPSK")
 
-ml.cool_scatter(complex_array.real, complex_array.imag)
+ml.cool_plot(signal.real, signal.imag, title="signal")
+
+ml.cool_scatter(complex_array.real, complex_array.imag, title="С интерполяцией по пилотам")
 
 plt.show()

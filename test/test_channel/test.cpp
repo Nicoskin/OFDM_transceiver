@@ -55,6 +55,19 @@ std::vector<cd> generate_noise(const std::vector<cd>& signal, double SNR_dB, uns
     return noise;
 }
 
+// Carrier Frequency Offset
+std::vector<cd> add_CFO(std::vector<cd>& signal, double CFO) {
+    double phase = 0.0;
+    std::vector<cd> signal_CFO(signal.size());
+    double phase_increment = 2 * M_PI * CFO;  // CFO = Сколько кручейни фазы за 1 сек / частота дискретизации (1536/1_920_000) = 0,0008
+    
+    for (int i = 0; i < signal.size(); ++i) {
+        signal_CFO[i] = signal[i] * std::exp(cd(0.0, phase));
+        phase += phase_increment;
+    }
+    return signal_CFO;
+}
+
 std::vector<std::complex<double>> pad_zeros(const std::vector<std::complex<double>>& signal,  size_t num_zeros_front, size_t num_zeros_back) {
     // Создаем новый вектор с необходимым размером
     std::vector<std::complex<double>> padded_signal;
@@ -111,6 +124,7 @@ int main() {
 
     double SNR_dB = 10.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
+    signal = add_CFO(signal, 0.0008);
     auto noise = generate_noise(signal, SNR_dB, 1);
     std::cout << "noise " << noise[0] << std::endl;
     std::vector<cd> noise_signal;
@@ -120,7 +134,9 @@ int main() {
 
     OFDM_demod ofdm_demod;
     auto demod_signal = ofdm_demod.demodulate(noise_signal);
+    saveCD(demod_signal, "dem_sig.txt");
     saveCD(qpsk_mod[0], "qpsk.txt");
+    saveCD(signal, "signal.txt");
 
     return 0;
 }
