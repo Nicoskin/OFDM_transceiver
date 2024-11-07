@@ -39,7 +39,7 @@ const std::unordered_map<ModulationType, std::vector<cd>> QAM_mod::symbolMaps = 
     {BPSK, BPSK_MAP},
     {QPSK, QPSK_MAP},
     {QAM16, QAM16_MAP},
-    {QAM64, QAM64_MAP}
+    {QAM64, QAM64_MAP},
 };
 
 // Параметры модуляции: количество бит на символ и нормализующий коэффициент
@@ -47,7 +47,7 @@ const std::unordered_map<ModulationType, std::pair<size_t, double>> QAM_mod::mod
     {BPSK, {1, 1.0}},
     {QPSK, {2, 2.0}},
     {QAM16, {4, 10.0}},
-    {QAM64, {6, 42.0}}
+    {QAM64, {6, 42.0}},
 };
 
 
@@ -67,6 +67,28 @@ void QAM_mod::setSymbols(const std::vector<cd>& symbolMap, const std::vector<int
 
 // Модуляция на основе типа модуляции
 std::vector<std::vector<cd>> QAM_mod::modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulationType) {
+    // If modulationType is not provided, use IQ_MODULATION to set the default
+    if (modulationType == ModulationType::None) {
+        switch (IQ_MODULATION) {
+            case 1:
+                modulationType = ModulationType::BPSK;
+                break;
+            case 2:
+                modulationType = ModulationType::QPSK;
+                break;
+            case 4:
+                modulationType = ModulationType::QAM16;
+                break;
+            case 6:
+                modulationType = ModulationType::QAM64;
+                break;
+            default:
+                std::cerr << "Unsupported IQ_MODULATION value" << std::endl;
+                return {};
+        }
+    }
+
+    // Ensure the modulationType is valid
     if (modulationParameters.find(modulationType) == modulationParameters.end()) {
         std::cerr << "Unsupported modulation type" << std::endl;
         return {};
@@ -81,12 +103,12 @@ std::vector<std::vector<cd>> QAM_mod::modulate(const std::vector<std::vector<uin
     for (const auto& bitVec : bits) {
         std::vector<int> intBits(bitVec.begin(), bitVec.end());
 
-        // Дополняем нулями, если не кратно размеру символа
+        // Pad with zeros if not a multiple of symbol size
         while (intBits.size() % symbolSize != 0) {
             intBits.push_back(0);
         }
 
-        // Устанавливаем символы и модулируем
+        // Set symbols and modulate
         setSymbols(symbolMap, intBits, symbolSize, normalizationFactor);
         result.push_back(symbols);
     }

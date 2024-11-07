@@ -18,7 +18,7 @@ using cd = std::complex<double>;
 
 // g++ test.cpp  ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp -o test && ./test
 
-std::vector<cd> generate_noise(const std::vector<cd>& signal, double SNR_dB, unsigned int seed) {
+std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned int seed) {
     // Вычисляем среднеквадратическое значение амплитуды сигнала
     double As = 0.0;
     for (const auto& s : signal) {
@@ -51,15 +51,20 @@ std::vector<cd> generate_noise(const std::vector<cd>& signal, double SNR_dB, uns
         double imag_part = distribution(generator);
         n = cd(real_part, imag_part);
     }
+    // Добавляем шум к сигналу
+    std::vector<cd> noisy_signal(signal.size());
+    for (size_t i = 0; i < signal.size(); ++i) {
+        noisy_signal[i] = signal[i] + noise[i];
+    }
 
-    return noise;
+    return noisy_signal;
 }
 
 // Carrier Frequency Offset
-std::vector<cd> add_CFO(std::vector<cd>& signal, double CFO) {
+std::vector<cd> add_CFO(std::vector<cd>& signal, double CFO = 1500, uint32_t F_srate = 1920000) {
     double phase = 0.0;
     std::vector<cd> signal_CFO(signal.size());
-    double phase_increment = 2 * M_PI * CFO;  // CFO = Сколько кручейни фазы за 1 сек / частота дискретизации (1536/1_920_000) = 0,0008
+    double phase_increment = 2 * M_PI * CFO/F_srate;  // CFO = Сколько кручейни фазы за 1 сек / частота дискретизации (1536/1_920_000) = 0,0008
     
     for (int i = 0; i < signal.size(); ++i) {
         signal_CFO[i] = signal[i] * std::exp(cd(0.0, phase));
@@ -112,28 +117,25 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
 int main() {
 
     Segmenter segmenter;
-    auto bits = generateRandBits(500, 2);
+    auto bits = generateRandBits(700, 2);
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
+    segmenter.get_size_data_in_slot();
 
     QAM_mod qam_mod;
-    auto qpsk_mod = qam_mod.modulate(segments, QPSK);
+    auto qpsk_mod = qam_mod.modulate(segments);
 
     OFDM_mod ofdm_mod;
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
-    double SNR_dB = 10.0;
+    double SNR_dB = 20.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
-    signal = add_CFO(signal, 0.0008);
-    auto noise = generate_noise(signal, SNR_dB, 1);
-    std::cout << "noise " << noise[0] << std::endl;
-    std::vector<cd> noise_signal;
-    for (int i = 0; i < signal.size(); ++i) {
-        noise_signal.push_back(signal[i] + noise[i]);
-    }
+    signal = add_CFO(signal, 500);
+    auto noise_signal = add_noise(signal, SNR_dB, 1);
 
     OFDM_demod ofdm_demod;
     auto demod_signal = ofdm_demod.demodulate(noise_signal);
+
     saveCD(demod_signal, "dem_sig.txt");
     saveCD(qpsk_mod[0], "qpsk.txt");
     saveCD(signal, "signal.txt");

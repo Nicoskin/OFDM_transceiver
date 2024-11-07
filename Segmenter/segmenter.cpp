@@ -15,6 +15,7 @@ Segmenter::Segmenter(
 std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>& bits) {
     std::vector<std::vector<uint8_t>> segments;
     setlocale(LC_ALL, "Russian");
+    dataBitsInput = bits.size();
 
     uint32_t maxLenLineInSegment = maxLenLine - segmentNumBits - usefulBits - crcBits;
     uint32_t totalSegments = (bits.size() + maxLenLineInSegment - 1) / maxLenLineInSegment;
@@ -149,4 +150,10 @@ std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vec
     }
 
     return scrambledData; // Возвращаем скрамблированные данные
+}
+
+
+void Segmenter::get_size_data_in_slot(){
+    int data_in_slot = maxLenLine-segmentNumBits-usefulBits-crcBits;
+    std::cout << "Data bits in slot : " << data_in_slot << "  |  Input data : " << dataBitsInput << std::endl;
 }

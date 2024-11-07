@@ -33,7 +33,7 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
 
     uint16_t n_slot = 0;
     for (const auto &input_symbols : input_matrix) {
-        // input_symbols - данные на 1 символ
+        // input_symbols - данные на 1 слот
 
         // Вставка PSS перед каждым слотом из 5 символов OFDM
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());

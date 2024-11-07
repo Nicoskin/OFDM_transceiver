@@ -6,6 +6,8 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "../config.h"
+
 using cd = std::complex<double>;
 
 // Перечисление типов модуляции
@@ -13,13 +15,14 @@ enum ModulationType {
     BPSK,
     QPSK,
     QAM16,
-    QAM64
+    QAM64,
+    None,
 };
 
 class QAM_mod {
 public:
     // Модуляция на основе битовой матрицы и типа модуляции
-    std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulationType);
+    std::vector<std::vector<cd>> modulate(const std::vector<std::vector<uint8_t>>& bits, ModulationType modulationType = ModulationType::None);
 
 private:
     // Установить символы на основе карты символов и битов

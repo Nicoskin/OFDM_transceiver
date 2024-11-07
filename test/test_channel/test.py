@@ -19,14 +19,14 @@ signal = load_complex_numbers("signal.txt")
 # Plot the complex array
 plt.figure(1, figsize=(10, 8))
 plt.title("RX")
-plt.plot(complex_array.real, '-', label="Real Part")
-plt.plot(complex_array.imag, '-', label="Imaginary Part")
+plt.plot(complex_array.real, '-o', label="Real Part")
+plt.plot(complex_array.imag, '-o', label="Imaginary Part")
 plt.legend()
 
 ml.cool_plot(complex_array_qpsk.real, complex_array_qpsk.imag, title="TX QPSK")
 
 ml.cool_plot(signal.real, signal.imag, title="signal")
 
-ml.cool_scatter(complex_array.real, complex_array.imag, title="С интерполяцией по пилотам")
+ml.cool_scatter(complex_array.real, complex_array.imag, title="")
 
 plt.show()

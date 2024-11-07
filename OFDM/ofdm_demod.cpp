@@ -20,20 +20,20 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     auto pss = ofdm_mod.mapPSS(0);
     auto corr_pss = correlation(signal, pss);
     auto data_indices = ofdm_mod.data_indices;
-            float maxi = 0;
-            for (int i = 0; i < corr_pss.size(); ++i) {
-                if (corr_pss[i] > maxi) maxi = corr_pss[i];
-            }
-            std::cout << "Max corr pss: " << maxi << std::endl;
+            // float maxi = 0;
+            // for (int i = 0; i < corr_pss.size(); ++i) {
+            //     if (corr_pss[i] > maxi) maxi = corr_pss[i];
+            // }
+            // std::cout << "Max corr pss: " << maxi << std::endl;
 
-    auto indexs_pss = find_indexs_pss(corr_pss, 0.87);
+    auto indexs_pss = find_ind_pss(corr_pss, 0.87);
 
     // Цикл по каждому слоту
     for (size_t n_slot = 0; n_slot < indexs_pss.size(); ++n_slot) {
-        auto one_slot =  extract_slots(signal, indexs_pss, n_slot);
+        auto one_slot = extract_slots(signal, indexs_pss, n_slot);
         
         auto corr_cp_arr = corr_cp(one_slot);
-        auto indexs_cp = find_max_cp(corr_cp_arr);
+        auto indexs_cp = find_ind_cp(corr_cp_arr);
 
         // Цикл по каждому символу в слоте
         for(size_t n_symb = 0; n_symb < OFDM_SYM_IN_SLOT; n_symb++){
@@ -44,10 +44,12 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
 
             auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb);
 
+            // Деление на канал
             for(int k_s = 0; k_s < N_FFT; k_s++){
                 one_symb_freq[k_s] = one_symb_freq[k_s] / inter_H[k_s];
             }
-            
+
+            // Сохраняем только данные
             for(auto ind : data_indices){
                 demod_signal.push_back(one_symb_freq[ind]);
             }
@@ -123,7 +125,7 @@ std::vector<double> OFDM_demod::correlation(const std::vector<cd>& y1, const std
 }
 
 
-std::vector<int> OFDM_demod::find_indexs_pss(const std::vector<double> corr, float threshold) {
+std::vector<int> OFDM_demod::find_ind_pss(const std::vector<double> corr, float threshold) {
     std::vector<int> indexs;
     for (int i = 0; i < corr.size(); ++i) {
         if (corr[i] > threshold) {
@@ -238,7 +240,7 @@ std::vector<double> OFDM_demod::corr_cp(const std::vector<cd>& slot_signal) {
 }
 
 
-std::vector<int> OFDM_demod::find_max_cp_normal(const std::vector<double>& corr_cp) {
+std::vector<int> OFDM_demod::find_ind_cp_normal(const std::vector<double>& corr_cp) {
     std::vector<int> indices;
     int CP_length = N_FFT / 12.8;
 
@@ -266,7 +268,7 @@ std::vector<int> OFDM_demod::find_max_cp_normal(const std::vector<double>& corr_
     return indices;
 }
 
-std::vector<int> OFDM_demod::find_max_cp_extended(const std::vector<double>& corr_cp) {
+std::vector<int> OFDM_demod::find_ind_cp_extended(const std::vector<double>& corr_cp) {
     std::vector<int> indices;
     int CP_length = N_FFT / 4;
 
@@ -292,11 +294,11 @@ std::vector<int> OFDM_demod::find_max_cp_extended(const std::vector<double>& cor
     return indices;
 }
 
-std::vector<int> OFDM_demod::find_max_cp(const std::vector<double>& corr_cp) {
+std::vector<int> OFDM_demod::find_ind_cp(const std::vector<double>& corr_cp) {
     std::vector<int> indices;
 
-    if (CP_LEN == 0) indices = find_max_cp_normal(corr_cp);
-    else             indices = find_max_cp_extended(corr_cp);
+    if (CP_LEN == 0) indices = find_ind_cp_normal(corr_cp);
+    else             indices = find_ind_cp_extended(corr_cp);
 
     return indices;
 }
@@ -310,18 +312,18 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
     std::vector<int> pilots_ind = ofdm_mod.pilot_indices;
     auto pilot_val = ofdm_mod.getRefs()[n_slot][n_symb];
 
-    // Fill pilot values
+    // Вычисление оценок канала и размещение их
     int k = 0;
     for (int idx : pilots_ind) {
         H_channel[k++] = signal[idx] / pilot_val[k];
-        interpolated_signal[idx] = H_channel[k - 1];  // Place the interpolated pilot value directly
+        interpolated_signal[idx] = H_channel[k - 1];  // Размещение оценок канала на индексах пилотов
     }
 
-    // Interpolate between each consecutive pair of pilot values within the range
+    // Интерполяция между каждой парой контрольных значений в пределах диапазона
     int end_range = N_FFT - G_SUBCAR / 2;
     for (size_t i = 0; i < pilots_ind.size() - 1; ++i) {
         int start_idx = pilots_ind[i];
-        int end_idx = std::min(pilots_ind[i + 1], end_range);  // Ensure end_idx doesn't exceed the range
+        int end_idx = std::min(pilots_ind[i + 1], end_range);  // end_idx не превышает заданный диапазон
         cd start_val = interpolated_signal[start_idx];
         cd end_val = interpolated_signal[end_idx];
 
@@ -331,7 +333,7 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
         }
     }
 
-    // Extend interpolation up to end_range if needed
+    // Продолжает значения после последнего пилота
     int last_pilot = pilots_ind.back();
     cd last_val = interpolated_signal[last_pilot];
     for (int j = last_pilot + 1; j < end_range; ++j) {

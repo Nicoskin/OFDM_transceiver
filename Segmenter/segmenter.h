@@ -20,12 +20,14 @@ public:
     std::vector<std::vector<uint8_t>> segment(const std::vector<uint8_t>& bits);
     std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
     std::vector<std::vector<uint8_t>> scramble(const std::vector<std::vector<uint8_t>>& data);
+    void get_size_data_in_slot();
 
 private:
     uint32_t maxLenLine;
     uint32_t segmentNumBits;
     uint32_t usefulBits;
     uint32_t crcBits;
+    uint32_t dataBitsInput;
 
     uint64_t computeCRC(const std::vector<uint8_t>& data);
 };
