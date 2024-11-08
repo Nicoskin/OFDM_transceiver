@@ -14,7 +14,7 @@ class QAM_demod {
 public:
     QAM_demod();
 
-    std::vector<int> demodulate(const std::vector<cd>& receivedSignal);
+    std::vector<uint8_t> demodulate(const std::vector<cd>& receivedSignal);
     std::vector<std::vector<double>> softDecision(const std::vector<cd>& receivedSignal);
 
 private:

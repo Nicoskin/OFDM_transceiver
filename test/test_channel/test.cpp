@@ -115,16 +115,14 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
 }
 
 int main() {
+    std::cout << "TX" << std::endl;
 
     Segmenter segmenter;
-    auto bits = generateRandBits(100, 2);
+    // auto bits = generateRandBits(100, 2);
+    auto bits = file2bits("test_file_in/арбуз арбуз.jpeg");
     auto segments = segmenter.segment(bits);
-    segments = segmenter.scramble(segments);
     segmenter.get_size_data_in_slot();
-        for (int i = 0; i < 100; ++i) {
-            std::cout << static_cast<int>(segments[0][i]) << "";
-        }
-        std::cout << std::endl;
+    segments = segmenter.scramble(segments);
 
     QAM_mod qam_mod;
     auto qpsk_mod = qam_mod.modulate(segments);
@@ -132,20 +130,32 @@ int main() {
     OFDM_mod ofdm_mod;
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
-    double SNR_dB = 2.0;
+    double SNR_dB = 30.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
     signal = add_CFO(signal, 500);
     auto noise_signal = add_noise(signal, SNR_dB, 1);
 
+    std::cout << "RX" << std::endl;
+        auto start = std::chrono::high_resolution_clock::now();
     OFDM_demod ofdm_demod;
     auto demod_signal = ofdm_demod.demodulate(noise_signal);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Time for OFDM demodulation: " << duration.count() << " ms" << std::endl;
 
+        start = std::chrono::high_resolution_clock::now();
     QAM_demod qam_demod;
     auto demod_bits = qam_demod.demodulate(demod_signal);
-        for (int i = 0; i < 100; ++i) {
-            std::cout << demod_bits[i] << "";
-        }
-        std::cout << std::endl;
+        end = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Time for QAM demodulation: " << duration.count() << " ms" << std::endl;
+
+    auto demod_bits_m = segmenter.reshape(demod_bits);
+    demod_bits_m = segmenter.scramble(demod_bits_m);
+
+    auto data = segmenter.extract_data(demod_bits_m);
+
+    bits2file("test_file_out/", data);
 
     saveCD(demod_signal, "dem_sig.txt");
     saveCD(qpsk_mod[0], "qpsk.txt");

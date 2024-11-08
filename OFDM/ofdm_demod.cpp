@@ -310,7 +310,7 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
     OFDM_mod ofdm_mod;
 
     std::vector<int> pilots_ind = ofdm_mod.pilot_indices;
-    auto pilot_val = ofdm_mod.getRefs()[n_slot][n_symb];
+    auto pilot_val = ofdm_mod.getRefs()[n_slot%20][n_symb];
 
     // Вычисление оценок канала и размещение их
     int k = 0;

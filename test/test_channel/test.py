@@ -15,7 +15,8 @@ dem_sig = load_complex_numbers("dem_sig.txt")
 qpsk = load_complex_numbers("qpsk.txt")
 
 
-ml.cool_plot(dem_sig.real, dem_sig.imag, title="dem_sig")
-ml.cool_plot(qpsk.real, qpsk.imag, title="qpsk")
+ml.cool_plot(dem_sig.real, dem_sig.imag, title="dem_sig SNR=20dB CFO 1000",vid= '-o')
+ml.cool_scatter(dem_sig.real, dem_sig.imag, title="dem_sig SNR=20dB CFO 1000")
+ml.cool_plot(qpsk.real, qpsk.imag, title="qpsk", vid= '-o')
 
 plt.show()

@@ -39,8 +39,8 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());
         
         for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
-            std::vector<cd> ofdm_symbol(input_symbols.begin() +  k      * (N_active_subcarriers-1),
-                                        input_symbols.begin() + (k + 1) * (N_active_subcarriers-1)+1); // +1 для включения последнего элемента
+            std::vector<cd> ofdm_symbol(input_symbols.begin() +  k      * (N_active_subcarriers-1)   + k,
+                                        input_symbols.begin() + (k + 1) * (N_active_subcarriers-1)+1 + k); // +1 для включения последнего элемента
 
             ofdm_symbol = mapData(ofdm_symbol);
             ofdm_symbol = mapPilots(ofdm_symbol, n_slot, k);
@@ -150,7 +150,7 @@ void OFDM_mod::generateIndices() {
 
 std::vector<cd> OFDM_mod::mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
 
-    std::vector<cd> pilots_val = refs[num_slot][num_symbol];
+    std::vector<cd> pilots_val = refs[num_slot%20][num_symbol];
     // std::cout << "num_slot = " << num_slot << "  num_symbol = " << num_symbol <<  std::endl;
     // for(auto i : pilots_val) {
     //     std::cout << i << " ";

@@ -79,8 +79,8 @@ std::vector<std::vector<double>> QAM_demod::softDecision(const std::vector<cd>& 
     return softDecisions;
 }
 
-std::vector<int> QAM_demod::demodulate(const std::vector<cd>& receivedSignal) {
-    std::vector<int> bits;
+std::vector<uint8_t> QAM_demod::demodulate(const std::vector<cd>& receivedSignal) {
+    std::vector<uint8_t> bits;
     int bitsPerSymbol = IQ_MODULATION;
 
     auto softD = softDecision(receivedSignal);

@@ -95,12 +95,6 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
     for (size_t i = 0; i < segments.size(); ++i) {
         const auto& segment = segments[i];
 
-        // Номер сегмента (первые segmentNumBits бит)
-        int segmentIndex = 0;
-        for (int j = 0; j < segmentNumBits; ++j) {
-            segmentIndex = (segmentIndex << 1) | segment[j];
-        }
-
         // Длина полезных бит (следующие usefulBits бит)
         int usefulBitsLength = 0;
         for (int j = 0; j < usefulBits; ++j) {
@@ -156,4 +150,52 @@ std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vec
 void Segmenter::get_size_data_in_slot(){
     int data_in_slot = maxLenLine-segmentNumBits-usefulBits-crcBits;
     std::cout << "Data bits in slot : " << data_in_slot << "  |  Input data : " << dataBitsInput << std::endl;
+}
+
+std::vector<std::vector<uint8_t>> Segmenter::reshape(const std::vector<uint8_t>& bits) {
+    std::vector<std::vector<uint8_t>> matrix;
+    size_t totalBits = bits.size();
+    size_t numRows = (totalBits + maxLenLine - 1) / maxLenLine;  // Округляем вверх
+
+    matrix.reserve(numRows);  // Оптимизация для избежания перераспределения памяти
+
+    for (size_t i = 0; i < totalBits; i += maxLenLine) {
+        size_t lineEnd = std::min(i + maxLenLine, totalBits);
+        matrix.emplace_back(bits.begin() + i, bits.begin() + lineEnd);
+    }
+
+    return matrix;
+}
+
+std::vector<uint8_t> Segmenter::extract_data(const std::vector<std::vector<uint8_t>>& bits) {
+    auto err_crc = checkCRC(bits);
+    if (!err_crc.empty()) {
+        std::cout << "Incorrect segments: ";
+        for (auto err : err_crc) {
+            std::cout << err << " ";
+        }
+        std::cout << std::endl;
+        return {};
+    }
+
+    std::vector<uint8_t> data_out;
+
+    for (size_t i = 0; i < bits.size(); ++i) {
+        const auto& segment = bits[i];
+
+        // Длина полезных бит (следующие usefulBits бит)
+        int usefulBitsLength = 0;
+        for (int j = 0; j < usefulBits; ++j) {
+            usefulBitsLength = (usefulBitsLength << 1) | segment[segmentNumBits + j];
+        }
+
+        // Если последний сегмент, отсечь случайные биты
+        int dataSize = (i == bits.size() - 1) ? usefulBitsLength : (maxLenLine - segmentNumBits - usefulBits - crcBits);
+
+        // Полезные данные
+        std::vector<uint8_t> data(segment.begin() + segmentNumBits + usefulBits, segment.begin() + segmentNumBits + usefulBits + dataSize);
+
+        data_out.insert(data_out.end(), data.begin(), data.end());
+    }
+    return data_out;
 }

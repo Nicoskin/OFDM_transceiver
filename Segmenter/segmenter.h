@@ -21,6 +21,8 @@ public:
     std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
     std::vector<std::vector<uint8_t>> scramble(const std::vector<std::vector<uint8_t>>& data);
     void get_size_data_in_slot();
+    std::vector<std::vector<uint8_t>> reshape(const std::vector<uint8_t>& bits);
+    std::vector<uint8_t> extract_data(const std::vector<std::vector<uint8_t>>& bits);
 
 private:
     uint32_t maxLenLine;
