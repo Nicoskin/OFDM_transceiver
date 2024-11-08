@@ -4,8 +4,7 @@
 #include <complex>
 #include <string>
 #include <cmath>
-#include <stdio.h>
-#include<cstdlib>
+
 #include <omp.h>
 
 
@@ -24,7 +23,7 @@
 using cd = std::complex<double>;
 
 
-// g++ test.cpp   ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -fopenmp -o test && ./test
+// g++ test.cpp  ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -fopenmp -o test && ./test
 
 std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned int seed) {
     // Вычисляем среднеквадратическое значение амплитуды сигнала
@@ -125,7 +124,7 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
 
 
 int main() {
-    omp_set_num_threads(6);
+    omp_set_num_threads(8);
     std::cout << "-----TX-----" << std::endl;
 
     Segmenter segmenter;
@@ -143,19 +142,16 @@ int main() {
 
     double SNR_dB = 30.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
-    signal = add_CFO(signal, 5000);
+    signal = add_CFO(signal, 7000);
     auto noise_signal = add_noise(signal, SNR_dB, 1);
 
-
-    auto pss = ofdm_mod.mapPSS();
 
     std::cout << "-----RX-----" << std::endl;
 
         auto start = std::chrono::high_resolution_clock::now();
-
     std::vector<std::complex<double>> noise_signal_cfo;
-    frequency_correlation(pss, noise_signal, 15000, noise_signal_cfo,1920000);
-    
+    frequency_correlation(ofdm_mod.mapPSS(0), noise_signal, 15000, noise_signal_cfo, 1920000);
+
     OFDM_demod ofdm_demod;
     auto demod_signal = ofdm_demod.demodulate(noise_signal_cfo);
         auto end = std::chrono::high_resolution_clock::now();
@@ -175,10 +171,9 @@ int main() {
     std::cout << "File saved" << std::endl;
 
 
-    
     // saveCD(demod_signal, "dem_sig.txt");
     // saveCD(qpsk_mod[0], "qpsk.txt");
-    //saveCD(signal, "signal.txt");
+    // saveCD(signal, "signal.txt");
 
     return 0;
 }

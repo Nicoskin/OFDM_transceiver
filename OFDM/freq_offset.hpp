@@ -3,6 +3,7 @@
 #include <complex>
 #include <cmath>
 #include <iomanip>
+#include <omp.h>
 
 using namespace std;
 

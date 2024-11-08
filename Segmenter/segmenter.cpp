@@ -149,7 +149,7 @@ std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vec
 
 void Segmenter::get_size_data_in_slot(){
     int data_in_slot = maxLenLine-segmentNumBits-usefulBits-crcBits;
-    std::cout << "Data bits in slot : " << data_in_slot << "  |  Input data : " << dataBitsInput << std::endl;
+    std::cout << "Data bits in slot : " << data_in_slot << "  |  Input data : " << dataBitsInput << "  |  N_Slots : " << std::ceil(dataBitsInput/data_in_slot) <<  std::endl;
 }
 
 std::vector<std::vector<uint8_t>> Segmenter::reshape(const std::vector<uint8_t>& bits) {
