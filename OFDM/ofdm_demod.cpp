@@ -4,6 +4,7 @@
 #include "ofdm_mod.h"
 
 #include <iostream>
+#include <iomanip>
 
 namespace {
     using cd = std::complex<double>;
@@ -55,13 +56,32 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
 
         // Запись результатов текущего слота в общий массив
         demod_slot_results[n_slot] = temp_demod_slot;
+
+            // Отображение прогресса
+            #pragma omp critical
+            {
+                if (omp_get_thread_num() == 0) {
+                int progress = static_cast<int>(100.0 * (n_slot + 1) / indexs_pss.size() * omp_get_num_threads());
+                int bar_width = 50; // ширина индикатора
+                int pos = bar_width * progress / 100;
+
+                std::cout << "\r[";
+                for (int i = 0; i < bar_width; ++i) {
+                    if (i < pos) std::cout << "=";
+                    else if (i == pos) std::cout << ">";
+                    else std::cout << " ";
+                }
+                std::cout << "] " << progress << "%";
+                std::cout.flush();
+                }
+            }
     }
 
     // Объединяем результаты всех слотов в один вектор
     for (const auto& slot_result : demod_slot_results) {
         demod_signal.insert(demod_signal.end(), slot_result.begin(), slot_result.end());
     }
-
+        std::cout << std::endl;
     return demod_signal;
 }
 
