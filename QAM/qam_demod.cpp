@@ -6,22 +6,22 @@ namespace {
     using namespace std::complex_literals;  
 }
 
-QAMDemodulator::QAMDemodulator(ModulationType modScheme) : modScheme(modScheme) {
+QAM_demod::QAM_demod() {
     generateConstellation();
 }
 
-void QAMDemodulator::generateConstellation() {
-    switch (modScheme) {
-        case BPSK:
+void QAM_demod::generateConstellation() {
+    switch (IQ_MODULATION) {
+        case 1:
             constellation = {1.0 + 0.0i, -1.0 + 0.0i};
             break;
-        case QPSK:
+        case 2:
             constellation = {1.0 + 1.0i, 1.0 - 1.0i, -1.0 + 1.0i, -1.0 - 1.0i};
             for (size_t i = 0; i < constellation.size(); ++i) {
                 constellation[i] = constellation[i] / std::sqrt(2); 
             }
             break;
-        case QAM16:
+        case 4:
             constellation = {
                 1.0 + 1.0i, 1.0 + 3.0i, 3.0 + 1.0i, 3.0 + 3.0i,
                 1.0 - 1.0i, 1.0 - 3.0i, 3.0 - 1.0i, 3.0 - 3.0i,
@@ -32,24 +32,24 @@ void QAMDemodulator::generateConstellation() {
                 constellation[i] = constellation[i] / std::sqrt(10); 
             }
             break;
-        case QAM64:
+        case 6:
             constellation = {
-                1.0 + 1.0i, 1.0 + 3.0i, 1.0 + 5.0i, 1.0 + 7.0i,
-                3.0 + 1.0i, 3.0 + 3.0i, 3.0 + 5.0i, 3.0 + 7.0i,
-                5.0 + 1.0i, 5.0 + 3.0i, 5.0 + 5.0i, 5.0 + 7.0i,
-                7.0 + 1.0i, 7.0 + 3.0i, 7.0 + 5.0i, 7.0 + 7.0i,
-                1.0 - 1.0i, 1.0 - 3.0i, 1.0 - 5.0i, 1.0 - 7.0i,
-                3.0 - 1.0i, 3.0 - 3.0i, 3.0 - 5.0i, 3.0 - 7.0i,
-                5.0 - 1.0i, 5.0 - 3.0i, 5.0 - 5.0i, 5.0 - 7.0i,
-                7.0 - 1.0i, 7.0 - 3.0i, 7.0 - 5.0i, 7.0 - 7.0i,
-                -1.0 + 1.0i, -1.0 + 3.0i, -1.0 + 5.0i, -1.0 + 7.0i,
-                -3.0 + 1.0i, -3.0 + 3.0i, -3.0 + 5.0i, -3.0 + 7.0i,
-                -5.0 + 1.0i, -5.0 + 3.0i, -5.0 + 5.0i, -5.0 + 7.0i,
-                -7.0 + 1.0i, -7.0 + 3.0i, -7.0 + 5.0i, -7.0 + 7.0i,
-                -1.0 - 1.0i, -1.0 - 3.0i, -1.0 - 5.0i, -1.0 - 7.0i,
-                -3.0 - 1.0i, -3.0 - 3.0i, -3.0 - 5.0i, -3.0 - 7.0i,
-                -5.0 - 1.0i, -5.0 - 3.0i, -5.0 - 5.0i, -5.0 - 7.0i,
-                -7.0 - 1.0i, -7.0 - 3.0i, -7.0 - 5.0i, -7.0 - 7.0i
+                3.0 + 3.0i, 3.0 + 1.0i, 1.0 + 3.0i, 1.0 + 1.0i, // 000000 - 000011
+                3.0 + 5.0i, 3.0 + 7.0i, 1.0 + 5.0i, 1.0 + 7.0i, // 000100 - 000111
+                5.0 + 3.0i, 5.0 + 1.0i, 7.0 + 3.0i, 7.0 + 1.0i, // 001000 - 001011
+                5.0 + 5.0i, 5.0 + 7.0i, 7.0 + 5.0i, 7.0 + 7.0i, // 001100 - 001111
+                3.0 - 3.0i, 3.0 - 1.0i, 1.0 - 3.0i, 1.0 - 1.0i, // 010000 - 010011
+                3.0 - 5.0i, 3.0 - 7.0i, 1.0 - 5.0i, 1.0 - 7.0i, // 010100 - 010111
+                5.0 - 3.0i, 5.0 - 1.0i, 7.0 - 3.0i, 7.0 - 1.0i, // 011000 - 011011
+                5.0 - 5.0i, 5.0 - 7.0i, 7.0 - 5.0i, 7.0 - 7.0i, // 011100 - 011111
+                -3.0 + 3.0i, -3.0 + 1.0i, -1.0 + 3.0i, -1.0 + 1.0i, // 100000 - 100011
+                -3.0 + 5.0i, -3.0 + 7.0i, -1.0 + 5.0i, -1.0 + 7.0i, // 100100 - 100111
+                -5.0 + 3.0i, -5.0 + 1.0i, -7.0 + 3.0i, -7.0 + 1.0i, // 101000 - 101011
+                -5.0 + 5.0i, -5.0 + 7.0i, -7.0 + 5.0i, -7.0 + 7.0i, // 101100 - 101111
+                -3.0 - 3.0i, -3.0 - 1.0i, -1.0 - 3.0i, -1.0 - 1.0i, // 110000 - 110011
+                -3.0 - 5.0i, -3.0 - 7.0i, -1.0 - 5.0i, -1.0 - 7.0i, // 110100 - 110111
+                -5.0 - 3.0i, -5.0 - 1.0i, -7.0 - 3.0i, -7.0 - 1.0i, // 111000 - 111011
+                -5.0 - 5.0i, -5.0 - 7.0i, -7.0 - 5.0i, -7.0 - 7.0i  // 111100 - 111111
             };
             for (size_t i = 0; i < constellation.size(); ++i) {
                 constellation[i] = constellation[i] / std::sqrt(42); 
@@ -58,7 +58,7 @@ void QAMDemodulator::generateConstellation() {
     }
 }
 
-std::vector<double> QAMDemodulator::softDecision(const std::complex<double>& point) {
+std::vector<double> QAM_demod::calculat_softDecision(const std::complex<double>& point) {
     std::vector<double> distances;
 
     for (const auto& symbol : constellation) {
@@ -69,37 +69,24 @@ std::vector<double> QAMDemodulator::softDecision(const std::complex<double>& poi
     return distances;
 }
 
-std::vector<std::vector<double>> QAMDemodulator::demodulate(const std::vector<std::complex<double>>& receivedSignal) {
+std::vector<std::vector<double>> QAM_demod::softDecision(const std::vector<cd>& receivedSignal) {
     std::vector<std::vector<double>> softDecisions;
 
     for (const auto& point : receivedSignal) {
-        softDecisions.push_back(softDecision(point));
+        softDecisions.push_back(calculat_softDecision(point));
     }
 
     return softDecisions;
 }
 
-std::vector<int> QAMDemodulator::softDecisionsToBits(const std::vector<std::vector<double>>& softDecisions) {
+std::vector<int> QAM_demod::demodulate(const std::vector<cd>& receivedSignal) {
     std::vector<int> bits;
-    int bitsPerSymbol = 0;
+    int bitsPerSymbol = IQ_MODULATION;
 
-    switch (modScheme) {
-        case BPSK:
-            bitsPerSymbol = 1;
-            break;
-        case QPSK:
-            bitsPerSymbol = 2;
-            break;
-        case QAM16:
-            bitsPerSymbol = 4;
-            break;
-        case QAM64:
-            bitsPerSymbol = 6;
-            break;
-    }
+    auto softD = softDecision(receivedSignal);
 
     // Преобразуем каждый мягкий символ в биты
-    for (const auto& symbolDistances : softDecisions) {
+    for (const auto& symbolDistances : softD) {
         // Найти индекс минимального расстояния вручную
         double minDistance = symbolDistances[0];
         int index = 0;

@@ -11,22 +11,11 @@ def load_complex_numbers(filename):
     complex_array = np.array([complex(float(real), float(imag)) for real, imag in lines])
     return complex_array
 
-complex_array = load_complex_numbers("dem_sig.txt")
-complex_array_qpsk = load_complex_numbers("qpsk.txt")
-signal = load_complex_numbers("signal.txt")
-#complex_array = complex_array[28:101]
+dem_sig = load_complex_numbers("dem_sig.txt")
+qpsk = load_complex_numbers("qpsk.txt")
 
-# Plot the complex array
-plt.figure(1, figsize=(10, 8))
-plt.title("RX")
-plt.plot(complex_array.real, '-o', label="Real Part")
-plt.plot(complex_array.imag, '-o', label="Imaginary Part")
-plt.legend()
 
-ml.cool_plot(complex_array_qpsk.real, complex_array_qpsk.imag, title="TX QPSK")
-
-ml.cool_plot(signal.real, signal.imag, title="signal")
-
-ml.cool_scatter(complex_array.real, complex_array.imag, title="")
+ml.cool_plot(dem_sig.real, dem_sig.imag, title="dem_sig")
+ml.cool_plot(qpsk.real, qpsk.imag, title="qpsk")
 
 plt.show()

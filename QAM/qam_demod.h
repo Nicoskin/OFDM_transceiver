@@ -10,19 +10,18 @@
 
 #include "qam_mod.h"
 
-class QAMDemodulator {
+class QAM_demod {
 public:
-    QAMDemodulator(ModulationType modScheme);
+    QAM_demod();
 
-    std::vector<std::vector<double>> demodulate(const std::vector<std::complex<double>>& receivedSignal);
-    std::vector<int> softDecisionsToBits(const std::vector<std::vector<double>>& softDecisions);
+    std::vector<int> demodulate(const std::vector<cd>& receivedSignal);
+    std::vector<std::vector<double>> softDecision(const std::vector<cd>& receivedSignal);
 
 private:
-    ModulationType modScheme;
     std::vector<std::complex<double>> constellation;
 
     void generateConstellation();
-    std::vector<double> softDecision(const std::complex<double>& point);
+    std::vector<double> calculat_softDecision(const std::complex<double>& point);
 };
 
 #endif // QAM_DEMOD_H

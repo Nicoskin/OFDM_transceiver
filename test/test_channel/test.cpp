@@ -117,10 +117,14 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
 int main() {
 
     Segmenter segmenter;
-    auto bits = generateRandBits(700, 2);
+    auto bits = generateRandBits(100, 2);
     auto segments = segmenter.segment(bits);
     segments = segmenter.scramble(segments);
     segmenter.get_size_data_in_slot();
+        for (int i = 0; i < 100; ++i) {
+            std::cout << static_cast<int>(segments[0][i]) << "";
+        }
+        std::cout << std::endl;
 
     QAM_mod qam_mod;
     auto qpsk_mod = qam_mod.modulate(segments);
@@ -128,7 +132,7 @@ int main() {
     OFDM_mod ofdm_mod;
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
-    double SNR_dB = 20.0;
+    double SNR_dB = 2.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
     signal = add_CFO(signal, 500);
     auto noise_signal = add_noise(signal, SNR_dB, 1);
@@ -136,9 +140,16 @@ int main() {
     OFDM_demod ofdm_demod;
     auto demod_signal = ofdm_demod.demodulate(noise_signal);
 
+    QAM_demod qam_demod;
+    auto demod_bits = qam_demod.demodulate(demod_signal);
+        for (int i = 0; i < 100; ++i) {
+            std::cout << demod_bits[i] << "";
+        }
+        std::cout << std::endl;
+
     saveCD(demod_signal, "dem_sig.txt");
     saveCD(qpsk_mod[0], "qpsk.txt");
-    saveCD(signal, "signal.txt");
+    //saveCD(signal, "signal.txt");
 
     return 0;
 }
