@@ -4,6 +4,8 @@
 #include <complex>
 #include <string>
 #include <cmath>
+#include <stdio.h>
+#include<cstdlib>
 
 #include "../../QAM/qam_mod.h"
 #include "../../QAM/qam_demod.h"
@@ -13,10 +15,12 @@
 #include "../../OFDM/sequence.h"
 #include "../../OFDM/fft/fft.h"
 #include "../../File_converter/file_converter.h"
+#include "../../OFDM/freq_offset.hpp"
+
 
 using cd = std::complex<double>;
 
-// g++ test.cpp  ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp -o test && ./test
+// g++ test.cpp   ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -o test && ./test
 
 std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned int seed) {
     // Вычисляем среднеквадратическое значение амплитуды сигнала
@@ -114,7 +118,10 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
     }
 }
 
+
+
 int main() {
+
     std::cout << "TX" << std::endl;
 
     Segmenter segmenter;
@@ -132,13 +139,19 @@ int main() {
 
     double SNR_dB = 30.0;
     auto signal = pad_zeros(ofdm_data, 1000, 1000);
-    signal = add_CFO(signal, 500);
+    signal = add_CFO(signal, 5000);
     auto noise_signal = add_noise(signal, SNR_dB, 1);
+
+    auto pss = ofdm_mod.mapPSS();
 
     std::cout << "RX" << std::endl;
         auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<std::complex<double>> noise_signal_cfo;
+    frequency_correlation(pss, noise_signal, 15000, noise_signal_cfo,1920000);
+    
     OFDM_demod ofdm_demod;
-    auto demod_signal = ofdm_demod.demodulate(noise_signal);
+    auto demod_signal = ofdm_demod.demodulate(noise_signal_cfo);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << "Time for OFDM demodulation: " << duration.count() << " ms" << std::endl;
@@ -156,9 +169,11 @@ int main() {
     auto data = segmenter.extract_data(demod_bits_m);
 
     bits2file("test_file_out/", data);
+  
 
-    saveCD(demod_signal, "dem_sig.txt");
-    saveCD(qpsk_mod[0], "qpsk.txt");
+    
+    // saveCD(demod_signal, "dem_sig.txt");
+    // saveCD(qpsk_mod[0], "qpsk.txt");
     //saveCD(signal, "signal.txt");
 
     return 0;
