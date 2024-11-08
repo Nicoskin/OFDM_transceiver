@@ -6,6 +6,8 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include <omp.h>
+#include <chrono>
 
 #include "../config.h"
 

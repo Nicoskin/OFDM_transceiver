@@ -6,6 +6,8 @@
 #include <cmath>
 #include <stdio.h>
 #include<cstdlib>
+#include <omp.h>
+
 
 #include "../../QAM/qam_mod.h"
 #include "../../QAM/qam_demod.h"
@@ -18,9 +20,11 @@
 #include "../../OFDM/freq_offset.hpp"
 
 
+#define M_PI 3.14159265358979323846
 using cd = std::complex<double>;
 
-// g++ test.cpp   ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -o test && ./test
+
+// g++ test.cpp   ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -fopenmp -o test && ./test
 
 std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned int seed) {
     // Вычисляем среднеквадратическое значение амплитуды сигнала
@@ -121,8 +125,8 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
 
 
 int main() {
-
-    std::cout << "TX" << std::endl;
+    omp_set_num_threads(6);
+    std::cout << "-----TX-----" << std::endl;
 
     Segmenter segmenter;
     // auto bits = generateRandBits(100, 2);
@@ -142,9 +146,11 @@ int main() {
     signal = add_CFO(signal, 5000);
     auto noise_signal = add_noise(signal, SNR_dB, 1);
 
+
     auto pss = ofdm_mod.mapPSS();
 
-    std::cout << "RX" << std::endl;
+    std::cout << "-----RX-----" << std::endl;
+
         auto start = std::chrono::high_resolution_clock::now();
 
     std::vector<std::complex<double>> noise_signal_cfo;
@@ -156,12 +162,8 @@ int main() {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << "Time for OFDM demodulation: " << duration.count() << " ms" << std::endl;
 
-        start = std::chrono::high_resolution_clock::now();
     QAM_demod qam_demod;
     auto demod_bits = qam_demod.demodulate(demod_signal);
-        end = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Time for QAM demodulation: " << duration.count() << " ms" << std::endl;
 
     auto demod_bits_m = segmenter.reshape(demod_bits);
     demod_bits_m = segmenter.scramble(demod_bits_m);
@@ -169,7 +171,9 @@ int main() {
     auto data = segmenter.extract_data(demod_bits_m);
 
     bits2file("test_file_out/", data);
-  
+
+    std::cout << "File saved" << std::endl;
+
 
     
     // saveCD(demod_signal, "dem_sig.txt");

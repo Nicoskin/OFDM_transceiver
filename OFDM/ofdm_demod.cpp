@@ -20,40 +20,46 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     auto pss = ofdm_mod.mapPSS(0);
     auto corr_pss = correlation(signal, pss);
     auto data_indices = ofdm_mod.data_indices;
-            // float maxi = 0;
-            // for (int i = 0; i < corr_pss.size(); ++i) {
-            //     if (corr_pss[i] > maxi) maxi = corr_pss[i];
-            // }
-            // std::cout << "Max corr pss: " << maxi << std::endl;
-
     auto indexs_pss = find_ind_pss(corr_pss, 0.87);
 
-    // Цикл по каждому слоту
+    // Результирующий вектор для данных всех слотов
+    std::vector<std::vector<cd>> demod_slot_results(indexs_pss.size());
+
+    // Параллелизация цикла по слотам
+    #pragma omp parallel for
     for (size_t n_slot = 0; n_slot < indexs_pss.size(); ++n_slot) {
         auto one_slot = extract_slots(signal, indexs_pss, n_slot);
-        
         auto corr_cp_arr = corr_cp(one_slot);
         auto indexs_cp = find_ind_cp(corr_cp_arr);
+
+        // Временный вектор для хранения данных текущего слота
+        std::vector<cd> temp_demod_slot;
 
         // Цикл по каждому символу в слоте
         for(size_t n_symb = 0; n_symb < OFDM_SYM_IN_SLOT; n_symb++){
             auto one_symb = extract_symb(one_slot, indexs_cp, n_symb);
-
             auto one_symb_freq = fft(one_symb);
             one_symb_freq = fftshift(one_symb_freq);
-
             auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb);
 
             // Деление на канал
-            for(int k_s = 0; k_s < N_FFT; k_s++){
+            for(int k_s = 0; k_s < N_FFT; k_s++) {
                 one_symb_freq[k_s] = one_symb_freq[k_s] / inter_H[k_s];
             }
 
-            // Сохраняем только данные
-            for(auto ind : data_indices){
-                demod_signal.push_back(one_symb_freq[ind]);
+            // Сохраняем только данные для текущего символа
+            for(auto ind : data_indices) {
+                temp_demod_slot.push_back(one_symb_freq[ind]);
             }
         }
+
+        // Запись результатов текущего слота в общий массив
+        demod_slot_results[n_slot] = temp_demod_slot;
+    }
+
+    // Объединяем результаты всех слотов в один вектор
+    for (const auto& slot_result : demod_slot_results) {
+        demod_signal.insert(demod_signal.end(), slot_result.begin(), slot_result.end());
     }
 
     return demod_signal;
@@ -106,6 +112,7 @@ std::vector<double> OFDM_demod::correlation(const std::vector<cd>& y1, const std
     normY2 = std::sqrt(normY2);
 
     // Цикл по сдвигам
+    #pragma omp parallel for
     for (size_t shift = 0; shift < maxShift; ++shift) {
         std::complex<double> sum(0.0, 0.0);
         double normY1 = 0.0;
