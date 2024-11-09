@@ -18,12 +18,14 @@
 #include "../../File_converter/file_converter.h"
 #include "../../OFDM/freq_offset.hpp"
 #include "model_channel.h"
+#include "../../matplotlibcpp.h"
 
 
 using cd = std::complex<double>;
+namespace plt = matplotlibcpp;
 
 
-// g++ test.cpp  model_channel.cpp ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -fopenmp -o test && ./test
+// g++ test.cpp -I/usr/include/python3.10 -lpython3.10 model_channel.cpp ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -fopenmp -o test && ./test
 
 void saveD(const std::vector<double>& arr, const std::string& filename) {
     std::ofstream outFile(filename);
@@ -100,7 +102,16 @@ int main() {
     std::cout << "File saved" << std::endl;
 
 
-    //saveCD(demod_signal, "test_file_out/dem_sig.txt");
+    std::vector<double> demod_bits_real, demod_bits_imag;
+    for (int i = 0; i < 5000; i++) {
+        demod_bits_real.push_back(std::real(noise_signal[i]));
+        demod_bits_imag.push_back(std::imag(noise_signal[i]));
+    }
+    plt::plot(demod_bits_real);
+    plt::plot(demod_bits_imag);
+    plt::show();
+
+    // saveCD(demod_signal, "test_file_out/dem_sig.txt");
     // saveCD(qpsk_mod[0], "qpsk.txt");
     // saveCD(signal, "signal.txt");
 
