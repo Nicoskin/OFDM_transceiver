@@ -42,6 +42,9 @@ private:
 
     std::vector<int> find_ind_cp_normal(const std::vector<double>& corr_cp);
     std::vector<int> find_ind_cp_extended(const std::vector<double>& corr_cp);
+
+    void sinr(const std::vector<cd>& signal, int first_ind_pss);
+    double calculate_power(const std::vector<cd>& signal);
     
 };
 

@@ -22,6 +22,7 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     auto corr_pss = correlation(signal, pss);
     auto data_indices = ofdm_mod.data_indices;
     auto indexs_pss = find_ind_pss(corr_pss, 0.87);
+    sinr(signal, indexs_pss[0]);
 
     // Результирующий вектор для данных всех слотов
     std::vector<std::vector<cd>> demod_slot_results(indexs_pss.size());
@@ -374,4 +375,24 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
     // std::cout << "-------------------\n";
 
     return interpolated_signal;
+}
+
+
+double OFDM_demod::calculate_power(const std::vector<cd>& signal) {
+    double power = 0.0;
+    for (int i = 0; i < signal.size(); ++i) {
+        power += std::abs(signal[i]) * std::abs(signal[i]);
+    }
+    return power / signal.size();
+}
+
+void OFDM_demod::sinr(const std::vector<cd>& signal, int first_ind_pss) {
+    std::vector<cd> sig(signal.begin() + first_ind_pss, signal.begin() + first_ind_pss + N_FFT);
+    std::vector<cd> noise(signal.begin() + first_ind_pss - CP_len - N_FFT, signal.begin() + first_ind_pss - CP_len);
+
+    double signal_power = calculate_power(sig);
+    double noise_power = calculate_power(noise);
+
+    double sinr = 10 * log10(signal_power / noise_power);
+    std::cout << "SINR: " << sinr << " dB" << std::endl;
 }
