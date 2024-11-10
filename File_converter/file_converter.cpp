@@ -87,6 +87,7 @@ void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits) {
 
     // Write the file data
     outputFile.write(reinterpret_cast<const char*>(fileData.data()), fileData.size());
+    std::cout << "File saved" << std::endl;
 }
 
 std::vector<uint8_t> generateRandBits(size_t n, unsigned int seed) {

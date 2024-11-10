@@ -30,6 +30,8 @@ private:
     uint32_t usefulBits;
     uint32_t crcBits;
     uint32_t dataBitsInput;
+    uint32_t maxLenLineInSegment;
+    uint32_t totalSegments;
 
     uint64_t computeCRC(const std::vector<uint8_t>& data);
 };

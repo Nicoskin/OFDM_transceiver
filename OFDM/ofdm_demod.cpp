@@ -58,6 +58,7 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
         // Запись результатов текущего слота в общий массив
         demod_slot_results[n_slot] = temp_demod_slot;
 
+        if (indexs_pss.size() >= 50) {
             // Отображение прогресса
             #pragma omp critical
             {
@@ -72,17 +73,21 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
                     else if (i == pos) std::cout << ">";
                     else std::cout << " ";
                 }
+                if (progress > 100) progress = 100;
                 std::cout << "] " << progress << "%";
                 std::cout.flush();
                 }
             }
+        }
     }
 
     // Объединяем результаты всех слотов в один вектор
     for (const auto& slot_result : demod_slot_results) {
         demod_signal.insert(demod_signal.end(), slot_result.begin(), slot_result.end());
     }
-        std::cout << std::endl;
+        if (indexs_pss.size() >= 50) {
+            std::cout << std::endl;
+        }
     return demod_signal;
 }
 

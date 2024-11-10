@@ -1058,7 +1058,46 @@ template<typename NumericX, typename NumericY, typename NumericColors>
 
         return res;
     }
-    
+
+template<typename NumericX, typename NumericY, typename NumericColors>
+    bool scatter_colored(const std::vector<NumericX>& x,
+                 const std::vector<NumericY>& y,
+                 const std::vector<NumericColors>& colors,
+                 const double s=1.0, // The marker size in points**2
+                 const std::string& cmap="hsv",
+                 const std::map<std::string, std::string> & keywords = {})
+    {
+        detail::_interpreter::get();
+
+        assert(x.size() == y.size());
+
+        PyObject* xarray = detail::get_array(x);
+        PyObject* yarray = detail::get_array(y);
+        PyObject* colors_array = detail::get_array(colors);
+        PyObject* cm = PyString_FromString(cmap.c_str());
+
+        PyObject* kwargs = PyDict_New();
+        PyDict_SetItemString(kwargs, "s", PyLong_FromLong(s));
+        PyDict_SetItemString(kwargs, "c", colors_array);
+        PyDict_SetItemString(kwargs, "cmap", cm);
+
+        for (const auto& it : keywords)
+        {
+            PyDict_SetItemString(kwargs, it.first.c_str(), PyString_FromString(it.second.c_str()));
+        }
+
+        PyObject* plot_args = PyTuple_New(2);
+        PyTuple_SetItem(plot_args, 0, xarray);
+        PyTuple_SetItem(plot_args, 1, yarray);
+
+        PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_scatter, plot_args, kwargs);
+
+        Py_DECREF(plot_args);
+        Py_DECREF(kwargs);
+        if(res) Py_DECREF(res);
+
+        return res;
+    }
 
 template<typename NumericX, typename NumericY, typename NumericZ>
 bool scatter(const std::vector<NumericX>& x,
