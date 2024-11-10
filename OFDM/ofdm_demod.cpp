@@ -286,7 +286,7 @@ std::vector<int> OFDM_demod::find_ind_cp_normal(const std::vector<double>& corr_
     CP_length = CP_length * 0.9;
 
     // Остальные интервалы: с шага (N_FFT + CP_LEN) начиная с first_end
-    for (int i = first_end; i < corr_cp.size()-N_FFT-CP_length; i += N_FFT + CP_length) {
+    for (int i = first_end; i < corr_cp.size(); i += N_FFT + CP_length) {
         // Определяем конец текущего интервала, не превышая длину corr_cp
         int end = std::min(i + N_FFT + CP_length, static_cast<int>(corr_cp.size()));
 

@@ -106,7 +106,7 @@ int main() {
     // cool_plot(data, "-o", "data");
     // cool_plot(noise_signal,"-", "noise_signal");
     // cool_plot(noise_signal_cfo,"-", "noise_signal_cfo");
-    //cool_scatter(std::vector<cd>(demod_signal.begin(), demod_signal.begin() + 1000), "demod_signal");
+    // cool_scatter(std::vector<cd>(demod_signal.begin(), demod_signal.begin() + 1000), "demod_signal");
     cool_scatter(demod_signal, "demod_signal");
     show_plot();
 

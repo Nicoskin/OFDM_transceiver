@@ -5,6 +5,7 @@
 #include <complex>
 #include <cmath>
 #include <algorithm>
+#include <cstdint>
 #include "../config.h"
 #include "sequence.h"
 
@@ -22,7 +23,7 @@ public:
 
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
 
-    std::vector<cd> mapPSS(int u = 0);
+    std::vector<cd> mapPSS(int u = N_CELL_ID % 3);
 
     std::vector<cd> mapSSS(int N_ID_cell);
 

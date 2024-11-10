@@ -11,6 +11,9 @@ using cd = std::complex<double>;
 // Явное инстанцирование шаблона для unsigned char
 template void cool_plot<unsigned char>(const std::vector<unsigned char>&, std::string, std::string, bool);
 
+// Явная инстанциация для типа double
+template void cool_plot<double>(const std::vector<double>&, std::string, std::string, bool);
+
 // Первая версия функции: для одного вектора комплексных чисел
 void cool_plot(const std::vector<cd>& data, std::string vid, std::string title, bool show_plot) {
 
