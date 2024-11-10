@@ -57,11 +57,12 @@ int main() {
     omp_set_num_threads(8);
     std::cout << "-----TX-----" << std::endl;
 
-    auto bits = generateRandBits(680*100, 2);
+    //auto bits = generateRandBits(680*2, 2);
+    auto bits = string2bits("Hello, World! Привет, Мир! 1234567890");
     //auto bits = file2bits("test_file_in/арбуз арбуз.jpeg");
     
     Segmenter segmenter;
-    auto segments = segmenter.segment(bits);
+    auto segments = segmenter.segment(bits, 1); // Flag: 0 случайные биты, 1 - текст, 2 - файл
     segmenter.get_size_data_in_slot();
     segments = segmenter.scramble(segments);
 
@@ -96,13 +97,17 @@ int main() {
     demod_bits_m = segmenter.scramble(demod_bits_m);
 
     auto data = segmenter.extract_data(demod_bits_m);
+    auto flag = segmenter.extract_flag(demod_bits_m);
 
-    //bits2file("test_file_out/", data);
+    if      (flag == 1) bits2string(data);
+    else if (flag == 2) bits2file("test_file_out/", data);
+
 
     // cool_plot(data, "-o", "data");
     // cool_plot(noise_signal,"-", "noise_signal");
     // cool_plot(noise_signal_cfo,"-", "noise_signal_cfo");
-    cool_scatter(std::vector<cd>(demod_signal.begin(), demod_signal.begin() + 1000), "demod_signal");
+    //cool_scatter(std::vector<cd>(demod_signal.begin(), demod_signal.begin() + 1000), "demod_signal");
+    cool_scatter(demod_signal, "demod_signal");
     show_plot();
 
     return 0;

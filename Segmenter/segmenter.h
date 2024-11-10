@@ -14,15 +14,16 @@ public:
             uint32_t maxLenLine = MAX_LEN_LINE,
             uint32_t segmentNumBits = SEGMENT_NUM_BITS,
             uint32_t usefulBits = USEFUL_BITS,
-            uint32_t crcBits = CRC_BITS
+            uint32_t crcBits = CRC_BITS,
+            uint16_t flagBits = 2
             );
 
-    std::vector<std::vector<uint8_t>> segment(const std::vector<uint8_t>& bits);
-    std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
+    std::vector<std::vector<uint8_t>> segment(const std::vector<uint8_t>& bits, uint8_t flag);
     std::vector<std::vector<uint8_t>> scramble(const std::vector<std::vector<uint8_t>>& data);
-    void get_size_data_in_slot();
     std::vector<std::vector<uint8_t>> reshape(const std::vector<uint8_t>& bits);
     std::vector<uint8_t> extract_data(const std::vector<std::vector<uint8_t>>& bits);
+    uint8_t extract_flag(const std::vector<std::vector<uint8_t>>& bits);
+    void get_size_data_in_slot();
 
 private:
     uint32_t maxLenLine;
@@ -32,7 +33,9 @@ private:
     uint32_t dataBitsInput;
     uint32_t maxLenLineInSegment;
     uint32_t totalSegments;
+    uint16_t flagBits;
 
+    std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
     uint64_t computeCRC(const std::vector<uint8_t>& data);
 };
 

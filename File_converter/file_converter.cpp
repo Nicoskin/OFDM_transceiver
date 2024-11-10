@@ -103,3 +103,27 @@ std::vector<uint8_t> generateRandBits(size_t n, unsigned int seed) {
     
     return bits;
 }
+
+// Функция для преобразования строки в вектор бит
+std::vector<uint8_t> string2bits(const std::string& str) {
+    std::vector<uint8_t> bits;
+    for (char ch : str) {
+        for (int i = 7; i >= 0; --i) {  // Извлекаем биты от старшего к младшему
+            bits.push_back((ch >> i) & 1);
+        }
+    }
+    return bits;
+}
+
+// Функция для преобразования вектора бит обратно в строку и вывод в терминал
+void bits2string(const std::vector<uint8_t>& bits) {
+    std::string str;
+    for (size_t i = 0; i < bits.size(); i += 8) {
+        uint8_t byte = 0;
+        for (int j = 0; j < 8; ++j) {  // Собираем 8 бит в один байт
+            byte = (byte << 1) | bits[i + j];
+        }
+        str.push_back(static_cast<char>(byte));
+    }
+    std::cout << "  -> " << str << std::endl;
+}

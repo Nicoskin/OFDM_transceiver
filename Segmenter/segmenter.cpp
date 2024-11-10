@@ -7,16 +7,18 @@ Segmenter::Segmenter(
     uint32_t maxLenLine,
     uint32_t segmentNumBits,
     uint32_t usefulBits,
-    uint32_t crcBits)
+    uint32_t crcBits,
+    uint16_t flagBits)
     : maxLenLine(maxLenLine), segmentNumBits(segmentNumBits),
-      usefulBits(usefulBits), crcBits(crcBits) {}
+      usefulBits(usefulBits), crcBits(crcBits), flagBits(flagBits) {}
 
 // Функция разбиения вектора бит на сегменты
-std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>& bits) {
+// Flag: 0 случайные биты, 1 - текст, 2 - файл
+std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>& bits, uint8_t flag) {
     std::vector<std::vector<uint8_t>> segments;
     setlocale(LC_ALL, "Russian");
     dataBitsInput = bits.size();
-    maxLenLineInSegment = maxLenLine - segmentNumBits - usefulBits - crcBits;
+    maxLenLineInSegment = maxLenLine - segmentNumBits - usefulBits - crcBits - flagBits;
     totalSegments = (dataBitsInput + maxLenLineInSegment - 1) / maxLenLineInSegment;
 
     //DEBUG
@@ -36,9 +38,14 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
             segment.push_back((i >> j) & 1);
         }
 
+        // Добавление флага (2 бита)
+        for (int j = flagBits-1; j >= 0; --j) {
+            segment.push_back((flag >> j) & 1);
+        }
+
         // Длина полезных бит
         uint32_t usefulBitsLength = (i == totalSegments - 1) ? (bits.size() % maxLenLineInSegment) : maxLenLineInSegment;
-        if (usefulBitsLength == 0) usefulBitsLength = maxLenLineInSegment; // Handle the case where bits.size() is a multiple of maxLenLineInSegment
+        if (usefulBitsLength == 0) usefulBitsLength = maxLenLineInSegment; // Когда bits.size() является кратным maxLenLineInSegment
 
         for (int j = usefulBits - 1; j >= 0; --j) {
             segment.push_back((usefulBitsLength >> j) & 1);
@@ -97,14 +104,14 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
         // Длина полезных бит (следующие usefulBits бит)
         int usefulBitsLength = 0;
         for (int j = 0; j < usefulBits; ++j) {
-            usefulBitsLength = (usefulBitsLength << 1) | segment[segmentNumBits + j];
+            usefulBitsLength = (usefulBitsLength << 1) | segment[segmentNumBits + flagBits + j];
         }
 
         // Если последний сегмент, отсечь случайные биты
-        int dataSize = (i == segments.size() - 1) ? usefulBitsLength : (maxLenLine - segmentNumBits - usefulBits - crcBits);
+        int dataSize = (i == segments.size() - 1 && usefulBitsLength > 0) ? usefulBitsLength : (maxLenLine - segmentNumBits - usefulBits - crcBits - flagBits);
 
         // Полезные данные
-        std::vector<uint8_t> data(segment.begin(), segment.begin() + segmentNumBits + usefulBits + dataSize);
+        std::vector<uint8_t> data(segment.begin(), segment.begin() + segmentNumBits + flagBits + usefulBits + dataSize);
 
         // Вычисление CRC
         uint64_t computedCRC = computeCRC(data);
@@ -112,7 +119,7 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
         // Полученный CRC из кадра (последние crcBits бит)
         uint64_t receivedCRC = 0;
         for (int j = 0; j < crcBits; ++j) {
-            receivedCRC = (receivedCRC << 1) | segment[segmentNumBits + usefulBits + dataSize + j];
+            receivedCRC = (receivedCRC << 1) | segment[segmentNumBits + flagBits + usefulBits + dataSize + j];
         }
 
         // Проверка CRC
@@ -147,8 +154,7 @@ std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vec
 
 
 void Segmenter::get_size_data_in_slot(){
-    int data_in_slot = maxLenLine-segmentNumBits-usefulBits-crcBits;
-    std::cout << "Data bits in slot : " << data_in_slot << "  |  Input data : " << dataBitsInput << "  |  N_Slots : " << totalSegments <<  std::endl;
+    std::cout << "Data bits in slot : " << maxLenLineInSegment << "  |  Input data : " << dataBitsInput << "  |  N_Slots : " << totalSegments <<  std::endl;
 }
 
 std::vector<std::vector<uint8_t>> Segmenter::reshape(const std::vector<uint8_t>& bits) {
@@ -185,16 +191,31 @@ std::vector<uint8_t> Segmenter::extract_data(const std::vector<std::vector<uint8
         // Длина полезных бит (следующие usefulBits бит)
         int usefulBitsLength = 0;
         for (int j = 0; j < usefulBits; ++j) {
-            usefulBitsLength = (usefulBitsLength << 1) | segment[segmentNumBits + j];
+            usefulBitsLength = (usefulBitsLength << 1) | segment[segmentNumBits + flagBits + j];
         }
 
         // Если последний сегмент, отсечь случайные биты
-        int dataSize = (i == bits.size() - 1) ? usefulBitsLength : (maxLenLine - segmentNumBits - usefulBits - crcBits);
+        int dataSize = (i == bits.size() - 1 && usefulBitsLength > 0) ? usefulBitsLength : (maxLenLine - segmentNumBits - usefulBits - crcBits - flagBits);
 
         // Полезные данные
-        std::vector<uint8_t> data(segment.begin() + segmentNumBits + usefulBits, segment.begin() + segmentNumBits + usefulBits + dataSize);
+        std::vector<uint8_t> data(segment.begin() + segmentNumBits + flagBits + usefulBits, segment.begin() + segmentNumBits + flagBits + usefulBits + dataSize);
 
         data_out.insert(data_out.end(), data.begin(), data.end());
     }
     return data_out;
+}
+
+uint8_t Segmenter::extract_flag(const std::vector<std::vector<uint8_t>>& bits) {
+    // Предполагается, что флаг находится сразу после номера сегмента
+    // и состоит из двух битов
+    if (bits.empty() || bits[0].size() < segmentNumBits + 2) {
+        throw std::runtime_error("Неверный формат сегментов или недостаточная длина");
+    }
+    
+    uint8_t flag = 0;
+    // Извлечение двух битов флага из первого сегмента
+    flag |= (bits[0][segmentNumBits] << 1);      // Старший бит флага
+    flag |= bits[0][segmentNumBits + 1];          // Младший бит флага
+
+    return flag;
 }

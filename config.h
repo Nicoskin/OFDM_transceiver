@@ -14,7 +14,7 @@
 #define MAX_LEN_LINE ((N_FFT-G_SUBCAR-N_PILOTS-1) * IQ_MODULATION * OFDM_SYM_IN_SLOT) // активных 360 поднесущих
 #define SEGMENT_NUM_BITS 10
 #define USEFUL_BITS 14
-#define CRC_BITS 16
+#define CRC_BITS 14
 
 
 #define N_CELL_ID 0
