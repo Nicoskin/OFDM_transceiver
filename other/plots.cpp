@@ -15,7 +15,7 @@ template void cool_plot<unsigned char>(const std::vector<unsigned char>&, std::s
 template void cool_plot<double>(const std::vector<double>&, std::string, std::string, bool);
 
 // Первая версия функции: для одного вектора комплексных чисел
-void cool_plot(const std::vector<cd>& data, std::string vid, std::string title, bool show_plot) {
+void cool_plot(const std::vector<cd>& data, std::string title, std::string vid, bool show_plot) {
 
     std::vector<double> real_part, imag_part;
     for (size_t i = 0; i < data.size(); ++i) {
@@ -50,7 +50,7 @@ void cool_plot(const std::vector<cd>& data, std::string vid, std::string title, 
 
 // Вторая версия функции: для одного вектора чисел (double)
 template <typename T>
-void cool_plot(const std::vector<T>& input, std::string vid, std::string title, bool show_plot) {
+void cool_plot(const std::vector<T>& input, std::string title, std::string vid, bool show_plot) {
     std::vector<double> y;
     y.reserve(input.size());  // Зарезервировать память для нового вектора
 

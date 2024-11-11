@@ -5,7 +5,7 @@
 #define N_FFT 128
 #define G_SUBCAR 55
 #define N_PILOTS 12
-#define CP_LEN 1 // Normal 0, Extended 1
+#define CP_LEN 0 // Normal 0, Extended 1
 
 #define IQ_MODULATION 2 // BPSK 1, QPSK 2, 16QAM 4, 64QAM 6
 #define OFDM_SYM_IN_SLOT 6

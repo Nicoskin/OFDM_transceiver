@@ -75,3 +75,17 @@ std::vector<std::complex<double>> pad_zeros(const std::vector<std::complex<doubl
 
     return padded_signal;
 }
+
+// some multipath impulse response 
+// h = {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}}
+std::vector<cd> add_Channel(const std::vector<cd>& signal, const std::vector<cd>& h) {
+    std::vector<cd> output(signal.size() + h.size() - 1, cd(0.0, 0.0));
+
+    for (size_t i = 0; i < signal.size(); ++i) {
+        for (size_t j = 0; j < h.size(); ++j) {
+            output[i + j] += signal[i] * h[j];
+        }
+    }
+
+    return output;
+}

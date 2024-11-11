@@ -2,6 +2,7 @@
 #include "fft/fft.h"
 
 #include "ofdm_mod.h"
+#include "../other/plots.h"
 
 #include <iostream>
 #include <iomanip>
@@ -18,7 +19,7 @@ OFDM_demod::OFDM_demod(){
 std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     std::vector<cd> demod_signal;
     OFDM_mod ofdm_mod;
-    auto pss = ofdm_mod.mapPSS(0);
+    auto pss = ofdm_mod.mapPSS();
     auto corr_pss = correlation(signal, pss);
     auto data_indices = ofdm_mod.data_indices;
     auto indexs_pss = find_ind_pss(corr_pss, 0.87);
@@ -386,7 +387,7 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
 double OFDM_demod::calculate_power(const std::vector<cd>& signal) {
     double power = 0.0;
     for (int i = 0; i < signal.size(); ++i) {
-        power += std::abs(signal[i]) * std::abs(signal[i]);
+        power += std::norm(signal[i]); // abs(signal[i])^2
     }
     return power / signal.size();
 }
@@ -398,6 +399,6 @@ void OFDM_demod::sinr(const std::vector<cd>& signal, int first_ind_pss) {
     double signal_power = calculate_power(sig);
     double noise_power = calculate_power(noise);
 
-    double sinr = 10 * log10(signal_power / noise_power);
+    double sinr = 10 * log10(signal_power / noise_power) - 3; // -3 подгонка к известному SNR
     std::cout << "SINR: " << sinr << " dB" << std::endl;
 }

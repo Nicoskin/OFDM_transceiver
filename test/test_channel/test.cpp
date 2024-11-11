@@ -57,12 +57,12 @@ int main() {
     omp_set_num_threads(8);
     std::cout << "-----TX-----" << std::endl;
 
-    //auto bits = generateRandBits(680*2, 2);
-    auto bits = string2bits("Hello, World! Привет, Мир! 1234567890");
+    auto bits = generateRandBits(680*1, 2);
+    //auto bits = string2bits("Hello, World! Привет, Мир! 1234567890");
     //auto bits = file2bits("test_file_in/арбуз арбуз.jpeg");
     
     Segmenter segmenter;
-    auto segments = segmenter.segment(bits, 1); // Flag: 0 случайные биты, 1 - текст, 2 - файл
+    auto segments = segmenter.segment(bits, 0); // Flag: 0 случайные биты, 1 - текст, 2 - файл
     segmenter.get_size_data_in_slot();
     segments = segmenter.scramble(segments);
 
@@ -73,8 +73,9 @@ int main() {
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
     double SNR_dB = 20.0;
-    auto signal = pad_zeros(ofdm_data, 2000, 1000);
-    signal = add_CFO(signal, 6000);
+    auto signal = pad_zeros(ofdm_data, 1000, 1000);
+    signal = add_CFO(signal, 6500);
+    //signal = add_Channel(signal, {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}});
     auto noise_signal = add_noise(signal, SNR_dB, 1);
 
 
@@ -82,7 +83,7 @@ int main() {
 
         auto start = std::chrono::high_resolution_clock::now();
     std::vector<std::complex<double>> noise_signal_cfo;
-    frequency_correlation(ofdm_mod.mapPSS(0), noise_signal, 15000, noise_signal_cfo, 1920000);
+    frequency_correlation(ofdm_mod.mapPSS(), noise_signal, 15000, noise_signal_cfo, 1920000);
 
     OFDM_demod ofdm_demod;
     auto demod_signal = ofdm_demod.demodulate(noise_signal_cfo);
