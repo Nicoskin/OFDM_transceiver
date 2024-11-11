@@ -1,6 +1,7 @@
 ﻿#include <vector>
 #include <complex>
 #include <random>
+#include <iostream>
 
 
 using cd = std::complex<double>;

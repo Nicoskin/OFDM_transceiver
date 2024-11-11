@@ -5,42 +5,32 @@
 using cd = std::complex<double>;
 
 std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned int seed) {
-    // Вычисляем среднеквадратическое значение амплитуды сигнала
-    double As = 0.0;
+    // Вычисляем среднюю мощность сигнала
+    double signal_power = 0.0;
+    int no_zero = 0;
     for (const auto& s : signal) {
-        As += std::norm(s);  // norm дает квадрат модуля комплексного числа
+        if (s == cd(0.0, 0.0)) continue;
+        signal_power += std::norm(s);  // norm дает квадрат модуля комплексного числа
+        no_zero++;
     }
-    As = std::sqrt(As / signal.size());  // Среднеквадратическое значение амплитуды сигнала
+    signal_power /= no_zero;  // Средняя мощность сигнала
 
     // Перевод SNR из dB в линейное значение
-    double SNR_linear = std::pow(10.0, SNR_dB / 20.0);
+    double SNR_linear = std::pow(10.0, SNR_dB / 10.0);
 
-    // Вычисляем среднеквадратическое значение амплитуды шума
-    double An = As / SNR_linear;
-
-    // Дисперсия шума (мощность каждой компоненты) с учетом амплитуды шума
-    double noise_variance = std::pow(An, 2) / 2.0;
+    // Вычисляем мощность шума, исходя из SNR
+    double noise_power = signal_power / SNR_linear;
 
     // Настройка генератора случайных чисел с нормальным распределением и заданным seed
-    std::default_random_engine generator;
-    if (seed != 0) {
-        generator.seed(seed);
-    } else {
-        generator.seed(std::random_device{}());
-    }
-    std::normal_distribution<double> distribution(0.0, std::sqrt(noise_variance));
+    std::default_random_engine generator(seed != 0 ? seed : std::random_device{}());
+    std::normal_distribution<double> distribution(0.0, std::sqrt(noise_power / 2.0));
 
-    // Генерируем шум
-    std::vector<cd> noise(signal.size());
-    for (auto& n : noise) {
-        double real_part = distribution(generator);
-        double imag_part = distribution(generator);
-        n = cd(real_part, imag_part);
-    }
-    // Добавляем шум к сигналу
+    // Генерируем шум и добавляем его к сигналу
     std::vector<cd> noisy_signal(signal.size());
     for (size_t i = 0; i < signal.size(); ++i) {
-        noisy_signal[i] = signal[i] + noise[i];
+        double real_part = distribution(generator);
+        double imag_part = distribution(generator);
+        noisy_signal[i] = signal[i] + cd(real_part, imag_part);
     }
 
     return noisy_signal;

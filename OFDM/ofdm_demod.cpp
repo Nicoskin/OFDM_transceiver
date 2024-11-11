@@ -185,7 +185,7 @@ std::vector<cd> OFDM_demod::extract_slots(const std::vector<cd>& signal, const s
 
     // Проверка валидности индексов
     if (end_index > signal.size()) {
-        throw std::out_of_range("Диапазон превышает размер вектора сигнала");
+        throw std::out_of_range(" extract_slots -> Диапазон превышает размер вектора сигнала");
     }
 
     // Возврат части сигнала
@@ -208,7 +208,7 @@ std::vector<cd> OFDM_demod::extract_symb(const std::vector<cd>& signal, const st
 
     // Проверка валидности индексов
     if (end_index > signal.size()) {
-        throw std::out_of_range("Диапазон превышает размер вектора сигнала");
+        throw std::out_of_range(" extract_symb -> Диапазон превышает размер вектора сигнала");
     }
 
     // Возврат части сигнала
@@ -233,7 +233,7 @@ std::vector<double> OFDM_demod::corr_cp_normal(const std::vector<cd>& slot_signa
     }
 
     int CP_len_s = CP_len * 0.9;
-    for (int i = CP_len_b; i <= slot_signal.size() - N_FFT; ++i) {
+    for (int i = CP_len_b; i <= slot_signal.size() - N_FFT-CP_len_s; ++i) {
         std::vector<cd> first_win(slot_signal.begin() + i, slot_signal.begin() + i + CP_len_s);
         std::vector<cd> second_win(slot_signal.begin() + i + N_FFT, slot_signal.begin() + i + N_FFT + CP_len_s);
         std::vector<double> correlat = correlation(first_win, second_win);
@@ -399,6 +399,6 @@ void OFDM_demod::sinr(const std::vector<cd>& signal, int first_ind_pss) {
     double signal_power = calculate_power(sig);
     double noise_power = calculate_power(noise);
 
-    double sinr = 10 * log10(signal_power / noise_power) - 3; // -3 подгонка к известному SNR
+    double sinr = 10 * log10(signal_power / noise_power) + 1.5; // -3 подгонка к известному SNR
     std::cout << "SINR: " << sinr << " dB" << std::endl;
 }
