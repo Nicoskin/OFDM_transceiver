@@ -18,18 +18,15 @@ template void cool_plot<double>(const std::vector<double>&, std::string, std::st
 void cool_plot(const std::vector<cd>& data, std::string title, std::string vid, bool show_plot) {
 
     std::vector<double> real_part, imag_part;
-    for (size_t i = 0; i < data.size(); ++i) {
-        real_part.push_back(std::real(data[i]));
-        imag_part.push_back(std::imag(data[i]));
+    for (auto symb : data) {
+        real_part.push_back(std::real(symb));
+        imag_part.push_back(std::imag(symb));
     }
 
     double max_real = *std::max_element(real_part.begin(), real_part.end());
     double max_imag = *std::max_element(imag_part.begin(), imag_part.end());
-    double min_real = *std::min_element(real_part.begin(), real_part.end());
-    double min_imag = *std::min_element(imag_part.begin(), imag_part.end());
 
     double maximum = std::max(max_real, max_imag);
-    double minimum = std::min(min_real, min_imag);
 
     plt::figure_size(1100, 600);
     plt::subplots_adjust({{"left", 0.07}, {"bottom", 0.08}, {"right", 0.95}, {"top", 0.92}});

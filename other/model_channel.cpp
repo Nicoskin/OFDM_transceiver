@@ -23,7 +23,7 @@ std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned
 
     // Настройка генератора случайных чисел с нормальным распределением и заданным seed
     std::default_random_engine generator(seed != 0 ? seed : std::random_device{}());
-    std::normal_distribution<double> distribution(0.0, std::sqrt(noise_power / 2.0));
+    std::normal_distribution distribution(0.0, std::sqrt(noise_power / 2.0));
 
     // Генерируем шум и добавляем его к сигналу
     std::vector<cd> noisy_signal(signal.size());
@@ -40,7 +40,7 @@ std::vector<cd> add_noise(const std::vector<cd>& signal, double SNR_dB, unsigned
 std::vector<cd> add_CFO(std::vector<cd>& signal, double CFO, uint32_t F_srate) {
     double phase = 0.0;
     std::vector<cd> signal_CFO(signal.size());
-    double phase_increment = 2 * M_PI * CFO/F_srate;  // CFO = Сколько кручейни фазы за 1 сек / частота дискретизации (1536/1_920_000) = 0,0008
+    double phase_increment = 2 * M_PI * CFO/F_srate;  // CFO = Сколько кручейни фазы за 1 сек 
     
     for (int i = 0; i < signal.size(); ++i) {
         signal_CFO[i] = signal[i] * std::exp(cd(0.0, phase));
@@ -66,8 +66,8 @@ std::vector<std::complex<double>> pad_zeros(const std::vector<std::complex<doubl
     return padded_signal;
 }
 
-// some multipath impulse response 
-// h = {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}}
+/* Добавление многолучевого распространения
+ * h = {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}} */
 std::vector<cd> add_Channel(const std::vector<cd>& signal, const std::vector<cd>& h) {
     std::vector<cd> output(signal.size() + h.size() - 1, cd(0.0, 0.0));
 

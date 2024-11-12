@@ -47,18 +47,7 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
             auto time_domain_symbol = ifft(ofdm_symbol);
 
             // Добавление циклического префикса
-            std::vector<cd> cp;
-            if (CP_LEN == 0) {
-                if (k == 0) {
-                    cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
-                } else {
-                    cp.assign(time_domain_symbol.end() - CP_len*0.9, time_domain_symbol.end());
-                }
-
-            } else {
-                cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
-            }
-            cp.insert(cp.end(), time_domain_symbol.begin(), time_domain_symbol.end());
+            std::vector<cd> cp = addCyclicPrefix(time_domain_symbol, k);
 
             output.insert(output.end(), cp.begin(), cp.end());
         }
@@ -72,6 +61,26 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
     }
 
     return output;
+}
+
+std::vector<cd> OFDM_mod::addCyclicPrefix(const std::vector<cd>& time_domain_symbol, int k) {
+    std::vector<cd> cp;
+
+    // Определение длины циклического префикса на основе индекса символа
+    if (CP_LEN == 0) {
+        if (k == 0) {
+            cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
+        } else {
+            cp.assign(time_domain_symbol.end() - CP_len * 0.9, time_domain_symbol.end());
+        }
+    } else {
+        cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
+    }
+
+    // Добавление циклического префикса к символу
+    cp.insert(cp.end(), time_domain_symbol.begin(), time_domain_symbol.end());
+
+    return cp;
 }
 
 void OFDM_mod::generateIndices() {

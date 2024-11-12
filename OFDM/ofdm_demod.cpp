@@ -20,8 +20,6 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     std::vector<cd> demod_signal;
     OFDM_mod ofdm_mod;
     const OFDM_Data& data = ofdm_mod.getData();
-    auto data_indices = data.data_indices;
-
     auto pss = ofdm_mod.mapPSS();
     auto corr_pss = correlation(signal, pss);
     auto indexs_pss = find_ind_pss(corr_pss, 0.87); // threshold - регулируемый порог
@@ -33,54 +31,11 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     // Параллелизация цикла по слотам
     #pragma omp parallel for
     for (size_t n_slot = 0; n_slot < indexs_pss.size(); ++n_slot) {
-        auto one_slot = extract_slots(signal, indexs_pss, n_slot);
-        auto corr_cp_arr = corr_cp(one_slot);
-        auto indexs_cp = find_ind_cp(corr_cp_arr);
+        demod_slot_results[n_slot] = demodulateSlot(signal, n_slot, indexs_pss, data.data_indices);
 
-        // Временный вектор для хранения данных текущего слота
-        std::vector<cd> temp_demod_slot;
-
-        // Цикл по каждому символу в слоте
-        for(size_t n_symb = 0; n_symb < OFDM_SYM_IN_SLOT; n_symb++){
-            auto one_symb = extract_symb(one_slot, indexs_cp, n_symb);
-            auto one_symb_freq = fft(one_symb);
-            one_symb_freq = fftshift(one_symb_freq);
-            auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb);
-
-            // Деление на канал
-            for(int k_s = 0; k_s < N_FFT; k_s++) {
-                one_symb_freq[k_s] = one_symb_freq[k_s] / inter_H[k_s];
-            }
-
-            // Сохраняем только данные для текущего символа
-            for(auto ind : data_indices) {
-                temp_demod_slot.push_back(one_symb_freq[ind]);
-            }
-        }
-
-        // Запись результатов текущего слота в общий массив
-        demod_slot_results[n_slot] = temp_demod_slot;
-
+        // Отображение прогресса если много слотов
         if (indexs_pss.size() >= 50) {
-            // Отображение прогресса
-            #pragma omp critical
-            {
-                if (omp_get_thread_num() == 0) {
-                int progress = static_cast<int>(100.0 * (n_slot + 1) / indexs_pss.size() * omp_get_num_threads());
-                int bar_width = 50; // ширина индикатора
-                int pos = bar_width * progress / 100;
-
-                std::cout << "\r[";
-                for (int i = 0; i < bar_width; ++i) {
-                    if (i < pos) std::cout << "=";
-                    else if (i == pos) std::cout << ">";
-                    else std::cout << " ";
-                }
-                if (progress > 100) progress = 100;
-                std::cout << "] " << progress << "%";
-                std::cout.flush();
-                }
-            }
+            displayProgress(n_slot, indexs_pss.size());
         }
     }
 
@@ -88,11 +43,71 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     for (const auto& slot_result : demod_slot_results) {
         demod_signal.insert(demod_signal.end(), slot_result.begin(), slot_result.end());
     }
-        if (indexs_pss.size() >= 50) {
-            std::cout << std::endl;
-        }
+
+    if (indexs_pss.size() >= 50) {
+        std::cout << std::endl;
+    }
+
     return demod_signal;
 }
+
+// Извлекает и демодулирует каждый слот
+std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const std::vector<int>& data_indices) {
+    auto one_slot = extract_slots(signal, indexs_pss, n_slot);
+    auto corr_cp_arr = corr_cp(one_slot);
+    auto indexs_cp = find_ind_cp(corr_cp_arr);
+    std::vector<cd> demod_slot;
+
+    // Цикл по каждому символу в слоте
+    #pragma omp parallel for
+    for (size_t n_symb = 0; n_symb < OFDM_SYM_IN_SLOT; ++n_symb) {
+        auto one_symb = extract_symb(one_slot, indexs_cp, n_symb);
+        auto one_symb_freq = fft(one_symb);
+        one_symb_freq = fftshift(one_symb_freq);
+        auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb);
+
+        // Деление на оценку канала
+        one_symb_freq = divideByChannel(one_symb_freq, inter_H);
+
+        // Сохраняем только данные
+        for (auto ind : data_indices) {
+            demod_slot.push_back(one_symb_freq[ind]);
+        }
+    }
+
+    return demod_slot;
+}
+
+// Деление OFDM символа на частотную характеристику канала
+std::vector<cd> OFDM_demod::divideByChannel(const std::vector<cd>& one_symb_freq, const std::vector<cd>& inter_H) {
+    std::vector<cd> result = one_symb_freq;
+    for (int k_s = 0; k_s < N_FFT; ++k_s) {
+        result[k_s] = one_symb_freq[k_s] / inter_H[k_s];
+    }
+    return result;
+}
+
+// Параллельное отображение хода выполнения
+void OFDM_demod::displayProgress(size_t n_slot, size_t total_slots) {
+    #pragma omp critical
+    {
+        if (omp_get_thread_num() == 0) {
+            int progress = static_cast<int>(100.0 * (n_slot + 1) / total_slots * omp_get_num_threads());
+            int bar_width = 50;
+            int pos = bar_width * progress / 100;
+            std::cout << "\r[";
+            for (int i = 0; i < bar_width; ++i) {
+                if (i < pos) std::cout << "=";
+                else if (i == pos) std::cout << ">";
+                else std::cout << " ";
+            }
+            if (progress > 100) progress = 100;
+            std::cout << "] " << progress << "%";
+            std::cout.flush();
+        }
+    }
+}
+
 
 std::vector<cd> OFDM_demod::convolve_fft(const std::vector<cd>& vec1, const std::vector<cd>& vec2) {
     int n1 = vec1.size(); 

@@ -49,6 +49,7 @@ private:
     void generateIndices();
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
+    std::vector<cd> addCyclicPrefix(const std::vector<cd>& time_domain_symbol, int k);
 };
 
 #endif // OFDM_MOD_H

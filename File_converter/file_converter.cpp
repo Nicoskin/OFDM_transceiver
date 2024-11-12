@@ -1,9 +1,6 @@
 ﻿#include "file_converter.h"
-
 #include <iostream>
 
-
-namespace fs = std::filesystem;
 
 std::vector<uint8_t> file2bits(const std::string& filePath) {
     std::ifstream inputFile(filePath, std::ios::binary);
@@ -21,7 +18,7 @@ std::vector<uint8_t> file2bits(const std::string& filePath) {
     std::vector<uint8_t> bits;
 
     // Добавить длину имени файла как первые 8 битов
-    uint8_t fileNameLength = static_cast<uint8_t>(fileName.size());
+    auto fileNameLength = static_cast<uint8_t>(fileName.size());
     for (int i = 7; i >= 0; --i) {
         bits.push_back((fileNameLength >> i) & 1);
     }
@@ -43,22 +40,22 @@ std::vector<uint8_t> file2bits(const std::string& filePath) {
     return bits;
 }
 
-void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits) {
+void bits2file(const fs::path& outputDir, const std::vector<uint8_t>& bits) {
     if (bits.size() < 8) {
-        throw std::runtime_error("Invalid bits data");
+        throw std::runtime_error("bits2file: Invalid bits data");
     }
 
-    // Extract the length of the file name
+    // Извлекает длину имени файла
     uint8_t fileNameLength = 0;
     for (int i = 0; i < 8; ++i) {
         fileNameLength = (fileNameLength << 1) | bits[i];
     }
 
     if (bits.size() < 8 + fileNameLength * 8) {
-        throw std::runtime_error("Invalid bits data");
+        throw std::runtime_error("bits2file: Invalid bits data");
     }
 
-    // Extract the file name
+    // Извлекает имя файла
     std::string fileName;
     for (int i = 8; i < 8 + fileNameLength * 8; i += 8) {
         uint8_t ch = 0;
@@ -68,7 +65,7 @@ void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits) {
         fileName.push_back(static_cast<char>(ch));
     }
 
-    // Extract the file data
+    // Извлекает данные
     std::vector<uint8_t> fileData;
     for (size_t i = 8 + fileNameLength * 8; i < bits.size(); i += 8) {
         uint8_t byte = 0;
@@ -78,18 +75,17 @@ void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits) {
         fileData.push_back(byte);
     }
 
-    // Create the output file path
-    fs::path outputPath(outputDir);
-    if (!fs::exists(outputPath)) {
+    // Создаёт путь к выходному файлу
+    if (fs::path outputPath(outputDir); !fs::exists(outputPath)) {
         fs::create_directories(outputPath);
     }
-    std::string outputFilePath = fs::path(outputDir) / fileName;
+    std::string outputFilePath = (fs::path(outputDir) / fileName).string();
     std::ofstream outputFile(outputFilePath, std::ios::binary);
     if (!outputFile) {
-        throw std::runtime_error("Failed to open file for writing: " + outputFilePath);
+        throw std::runtime_error("bits2file: Failed to open file for writing: " + outputFilePath);
     }
 
-    // Write the file data
+    // Записывает данные файла
     outputFile.write(reinterpret_cast<const char*>(fileData.data()), fileData.size());
     std::cout << "File saved" << std::endl;
 }

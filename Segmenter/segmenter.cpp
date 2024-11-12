@@ -69,9 +69,6 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
             segment.push_back(dis(gen));
         }
 
-        //DEBUG
-        // std::cout << i << " crc " << crc << "  " << std::bitset<16>(crc) << std::endl;
-
         segments.push_back(segment);
     }
 
@@ -106,7 +103,7 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
         for (int j = 0; j < segmentNumBits; ++j) {
             segmentIndex = (segmentIndex << 1) | segment[j];
         }
-        if (i != segmentIndex) {
+        if (i % static_cast<int>(pow(2.0, double(segmentNumBits))) != segmentIndex) {
             incorrectSegments.push_back(i);
             continue;
         }
