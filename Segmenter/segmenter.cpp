@@ -101,6 +101,16 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
     for (size_t i = 0; i < segments.size(); ++i) {
         const auto& segment = segments[i];
 
+        // Номер сегмента (первые segmentNumBits бит)
+        int segmentIndex = 0;
+        for (int j = 0; j < segmentNumBits; ++j) {
+            segmentIndex = (segmentIndex << 1) | segment[j];
+        }
+        if (i != segmentIndex) {
+            incorrectSegments.push_back(i);
+            continue;
+        }
+
         // Длина полезных бит (следующие usefulBits бит)
         int usefulBitsLength = 0;
         for (int j = 0; j < usefulBits; ++j) {

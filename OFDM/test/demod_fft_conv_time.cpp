@@ -9,7 +9,7 @@
 
 // g++ demod_fft_conv_time.cpp ../ofdm_demod.cpp ../ofdm_mod.cpp ../fft/fft.cpp -o test && ./test
 
-
+// НЕ РАБОТАЕТ
 int main() {
     OFDM_demod OFDM_demod;
 

@@ -5,7 +5,7 @@
 #include "../qam_mod.h"
 #include "../qam_demod.h"
 
-// g++ test.cpp ../qam_mod.cpp ../qam_demod.cpp -o test && ./test
+// g++ test_demod.cpp ../qam_mod.cpp ../qam_demod.cpp -o test && ./test
 
 namespace {
     using cd = std::complex<double>;
@@ -52,7 +52,8 @@ int main() {
     }
     std::cout << std::endl;
 
-    auto qpsk_mod = modulate(bits, 2);
+    QAM_mod QAM_mod; 
+    auto qpsk_mod = QAM_mod.modulate(bits, QPSK);
 
     std::cout << "Modulated Symbols:\n";
     for (const auto& symbol_vec : qpsk_mod) {
@@ -78,21 +79,12 @@ int main() {
     std::cout << std::endl;
 
     // Демодуляция сигнала
-    QAMDemodulator QAMDemod(QPSK);
-    auto softDecisions = QAMDemod.demodulate(noisy_signal);
+    QAM_demod QAMDemod;
+    auto out_bits = QAMDemod.demodulate(noisy_signal);
 
-    std::cout << "Demodulated Metrics:\n";
-    for (const auto& symbol : softDecisions) {
-        for (const auto& metric : symbol) {
-            std::cout << metric << ", ";
-        }
-        std::cout << "\n";
-    }
-
-    std::vector<int> out_bits = QAMDemod.softDecisionsToBits(softDecisions);
     std::cout << "\nDemodulated Bits:\n";
-    for (const auto& bit : out_bits) {
-        std::cout << bit << " ";
+    for (const auto bit : out_bits) {
+        std::cout << static_cast<int>(bit) << " ";
     }
     std::cout << std::endl;
 

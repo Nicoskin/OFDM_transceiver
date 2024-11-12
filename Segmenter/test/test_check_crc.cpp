@@ -11,12 +11,12 @@ int main() {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,}; 
     Segmenter segmenter;
     
-    std::vector<std::vector<uint8_t>> segments = segmenter.segment(bits);
+    std::vector<std::vector<uint8_t>> segments = segmenter.segment(bits, 0);
     
     std::cout << static_cast<int>(segments[0][100])<<std::endl;
     //segments[0][200] = 0; // за полезными данными и crc
-    segments[0][100] = 0; // ошибка в данных
-
+    segments[0][100] = (segments[0][100] == 0) ? 1 : 0;
+    
     auto err_crc = segmenter.checkCRC(segments);
 
 
