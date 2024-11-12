@@ -1,17 +1,15 @@
-﻿#include "../ofdm_mod.h"
-#include "../fft/fft.h"
+﻿#include "../sequence.h"
 #include <iostream>
 #include <chrono>
 
-// g++ test_sss_time.cpp ../ofdm_mod.cpp ../fft/fft.cpp -o test && ./test
+// g++ test_sss_time.cpp ../sequence.cpp -o test && ./test
 
 int main(){
-    OFDM_mod ofdm_mod;
 
     auto start_correlate = std::chrono::high_resolution_clock::now();
 
     for (int cell_id = 0; cell_id < 168; ++cell_id){
-        auto sss = ofdm_mod.generate_sss(cell_id);
+        auto sss = generate_sss(cell_id);
     }
     
     auto end_correlate = std::chrono::high_resolution_clock::now();

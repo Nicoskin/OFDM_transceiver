@@ -5,7 +5,7 @@
 #include <complex>
 #include <cmath>
 #include <unordered_map>
-
+#include <cstdint>
 #include "../config.h"
 
 using cd = std::complex<double>;
