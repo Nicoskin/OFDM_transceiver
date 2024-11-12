@@ -12,7 +12,7 @@
 
 class QAM_demod {
 public:
-    QAM_demod();
+    QAM_demod(int modulation = IQ_MODULATION);
 
     std::vector<uint8_t> demodulate(const std::vector<cd>& receivedSignal);
     std::vector<std::vector<double>> softDecision(const std::vector<cd>& receivedSignal);
@@ -20,7 +20,7 @@ public:
 private:
     std::vector<std::complex<double>> constellation;
 
-    void generateConstellation();
+    void generateConstellation(int modulation);
     std::vector<double> calculat_softDecision(const std::complex<double>& point);
 };
 

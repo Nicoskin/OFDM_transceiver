@@ -12,8 +12,8 @@ void printBits(const std::vector<uint8_t>& bits) {
 }
 
 int main() {
-    const std::string originalFilePath = "../test.txt"; // Path to the original file
-    const std::string outputDir = "."; // Directory to store the output file
+    const std::string originalFilePath = "./files_for_test/test.txt"; // Path to the original file
+    const std::string outputDir = "./out_files"; // Directory to store the output file
     std::string fileName; // Will hold the file name
 
     try {

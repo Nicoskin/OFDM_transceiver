@@ -19,10 +19,12 @@ OFDM_demod::OFDM_demod(){
 std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     std::vector<cd> demod_signal;
     OFDM_mod ofdm_mod;
+    const OFDM_Data& data = ofdm_mod.getData();
+    auto data_indices = data.data_indices;
+
     auto pss = ofdm_mod.mapPSS();
     auto corr_pss = correlation(signal, pss);
-    auto data_indices = ofdm_mod.data_indices;
-    auto indexs_pss = find_ind_pss(corr_pss, 0.87);
+    auto indexs_pss = find_ind_pss(corr_pss, 0.87); // threshold - регулируемый порог
     sinr(signal, indexs_pss[0]);
 
     // Результирующий вектор для данных всех слотов
@@ -342,9 +344,10 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
     std::vector<cd> H_channel(N_PILOTS);
     std::vector<cd> interpolated_signal(N_FFT);
     OFDM_mod ofdm_mod;
+    const OFDM_Data& data = ofdm_mod.getData();
 
-    std::vector<int> pilots_ind = ofdm_mod.pilot_indices;
-    auto pilot_val = ofdm_mod.getRefs()[n_slot%20][n_symb];
+    std::vector<int> pilots_ind = data.pilot_indices;
+    auto pilot_val = data.refs[n_slot%20][n_symb];
 
     // Вычисление оценок канала и размещение их
     int k = 0;
@@ -374,12 +377,6 @@ std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_
         interpolated_signal[j] = last_val;
     }
 
-    // // Output for debug
-    // for (auto symb : H_channel) {
-    //     std::cout << symb << ",\n";
-    // }
-    // std::cout << "-------------------\n";
-
     return interpolated_signal;
 }
 
@@ -399,6 +396,6 @@ void OFDM_demod::sinr(const std::vector<cd>& signal, int first_ind_pss) {
     double signal_power = calculate_power(sig);
     double noise_power = calculate_power(noise);
 
-    double sinr = 10 * log10(signal_power / noise_power) + 1.5; // -3 подгонка к известному SNR
+    double sinr = 10 * log10(signal_power / noise_power) + 1.5; // +1.5 подгонка к известному SNR
     std::cout << "SINR: " << sinr << " dB" << std::endl;
 }

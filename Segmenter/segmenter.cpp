@@ -28,7 +28,7 @@ std::vector<std::vector<uint8_t>> Segmenter::segment(const std::vector<uint8_t>&
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 1);
+    std::uniform_int_distribution dis(0, 1);
 
     for (uint32_t i = 0; i < totalSegments; ++i) {
         std::vector<uint8_t> segment;
@@ -101,6 +101,16 @@ std::vector<int> Segmenter::checkCRC(const std::vector<std::vector<uint8_t>>& se
     for (size_t i = 0; i < segments.size(); ++i) {
         const auto& segment = segments[i];
 
+        // Номер сегмента (первые segmentNumBits бит)
+        int segmentIndex = 0;
+        for (int j = 0; j < segmentNumBits; ++j) {
+            segmentIndex = (segmentIndex << 1) | segment[j];
+        }
+        if (i != segmentIndex) {
+            incorrectSegments.push_back(i);
+            continue;
+        }
+
         // Длина полезных бит (следующие usefulBits бит)
         int usefulBitsLength = 0;
         for (int j = 0; j < usefulBits; ++j) {
@@ -153,7 +163,7 @@ std::vector<std::vector<uint8_t>> Segmenter::scramble(const std::vector<std::vec
 }
 
 
-void Segmenter::get_size_data_in_slot(){
+void Segmenter::get_size_data_in_slot() const {
     std::cout << "Data bits in slot : " << maxLenLineInSegment << "  |  Input data : " << dataBitsInput << "  |  N_Slots : " << totalSegments <<  std::endl;
 }
 

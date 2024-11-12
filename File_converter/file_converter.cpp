@@ -79,6 +79,10 @@ void bits2file(const std::string& outputDir, const std::vector<uint8_t>& bits) {
     }
 
     // Create the output file path
+    fs::path outputPath(outputDir);
+    if (!fs::exists(outputPath)) {
+        fs::create_directories(outputPath);
+    }
     std::string outputFilePath = fs::path(outputDir) / fileName;
     std::ofstream outputFile(outputFilePath, std::ios::binary);
     if (!outputFile) {

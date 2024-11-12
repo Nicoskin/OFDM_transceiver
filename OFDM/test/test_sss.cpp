@@ -1,9 +1,8 @@
-﻿#include "../ofdm_mod.h"
-#include "../fft/fft.h"
+﻿#include "../sequence.h"
 #include <iostream>
 #include <complex>
 
-// g++ test_sss.cpp ../ofdm_mod.cpp ../fft/fft.cpp -o test && ./test
+// g++ test_sss.cpp ../sequence.cpp -o test && ./test
 
 // // Функция для генерации SSS
 // std::vector<int8_t> generate_sss(int N_ID_cell) {
@@ -100,9 +99,8 @@
 // }
 
 int main(){
-    OFDM_mod ofdm_mod;
     int cell_id = 0;  // Пример ID соты
-    auto sss = ofdm_mod.generate_sss(cell_id);
+    auto sss = generate_sss(cell_id);
 
     // // Выводим сгенерированную последовательность SSS
     // for (int i = 0; i < sss.size(); ++i) {

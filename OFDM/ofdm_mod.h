@@ -11,33 +11,44 @@
 
 using cd = std::complex<double>;
 
-class OFDM_mod {
-public:
-    OFDM_mod();
-
+// Structure to hold all indices and references
+struct OFDM_Data {
     std::vector<int> data_indices;
     std::vector<int> data_indices_noPilots;
     std::vector<int> data_indices_shifted;
     std::vector<int> pilot_indices;
     std::vector<int> pilot_indices_shifted;
 
+    std::vector<std::vector<std::vector<cd>>> refs;
+    int N_rb;
+    int N_active_subcarriers;
+
+    OFDM_Data() :   N_rb((N_FFT - G_SUBCAR - 1) / 12),
+                    N_active_subcarriers(N_FFT - G_SUBCAR - N_PILOTS - 1)
+    {
+        refs.resize(20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0))));
+    }
+    
+};
+
+
+class OFDM_mod {
+public:
+    OFDM_mod();
+
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
-
     std::vector<cd> mapPSS(int u = N_CELL_ID % 3);
-
     std::vector<cd> mapSSS(int N_ID_cell);
 
-    const std::vector<std::vector<std::vector<cd>>>& getRefs() const { return refs; }
+    const OFDM_Data& getData() const { return data; }
 
 private:
-    int N_active_subcarriers;
-    int N_rb;
     int CP_len;
-    std::vector<std::vector<std::vector<cd>>> refs;
-    void generateIndices();
+    OFDM_Data data; 
 
+    void generateIndices();
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
 };
 
- #endif // OFDM_MOD_H
+#endif // OFDM_MOD_H

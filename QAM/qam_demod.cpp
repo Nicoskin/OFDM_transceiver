@@ -1,58 +1,40 @@
 ﻿#include "qam_demod.h"
 #include "qam_mod.h"
+#include "qam_maps.h"
 
 namespace {
     using cd = std::complex<double>;
     using namespace std::complex_literals;  
 }
 
-QAM_demod::QAM_demod() {
-    generateConstellation();
+QAM_demod::QAM_demod(int modulation) {
+    generateConstellation(modulation);
 }
 
-void QAM_demod::generateConstellation() {
-    switch (IQ_MODULATION) {
+void QAM_demod::generateConstellation(int modulation) {
+    switch (modulation) {
         case 1:
-            constellation = {1.0 + 0.0i, -1.0 + 0.0i};
+            constellation = BPSK_MAP;
+            for (auto& point : constellation) {
+                point /= std::sqrt(1); 
+            }
             break;
         case 2:
-            constellation = {1.0 + 1.0i, 1.0 - 1.0i, -1.0 + 1.0i, -1.0 - 1.0i};
-            for (size_t i = 0; i < constellation.size(); ++i) {
-                constellation[i] = constellation[i] / std::sqrt(2); 
+            constellation = QPSK_MAP;
+            for (auto& point : constellation) {
+                point /= std::sqrt(2);
             }
             break;
         case 4:
-            constellation = {
-                1.0 + 1.0i, 1.0 + 3.0i, 3.0 + 1.0i, 3.0 + 3.0i,
-                1.0 - 1.0i, 1.0 - 3.0i, 3.0 - 1.0i, 3.0 - 3.0i,
-                -1.0 + 1.0i, -1.0 + 3.0i, -3.0 + 1.0i, -3.0 + 3.0i,
-                -1.0 - 1.0i, -1.0 - 3.0i, -3.0 - 1.0i, -3.0 - 3.0i
-            };
-            for (size_t i = 0; i < constellation.size(); ++i) {
-                constellation[i] = constellation[i] / std::sqrt(10); 
+            constellation = QAM16_MAP;
+            for (auto& point : constellation) {
+                point /= std::sqrt(10);
             }
             break;
         case 6:
-            constellation = {
-                3.0 + 3.0i, 3.0 + 1.0i, 1.0 + 3.0i, 1.0 + 1.0i, // 000000 - 000011
-                3.0 + 5.0i, 3.0 + 7.0i, 1.0 + 5.0i, 1.0 + 7.0i, // 000100 - 000111
-                5.0 + 3.0i, 5.0 + 1.0i, 7.0 + 3.0i, 7.0 + 1.0i, // 001000 - 001011
-                5.0 + 5.0i, 5.0 + 7.0i, 7.0 + 5.0i, 7.0 + 7.0i, // 001100 - 001111
-                3.0 - 3.0i, 3.0 - 1.0i, 1.0 - 3.0i, 1.0 - 1.0i, // 010000 - 010011
-                3.0 - 5.0i, 3.0 - 7.0i, 1.0 - 5.0i, 1.0 - 7.0i, // 010100 - 010111
-                5.0 - 3.0i, 5.0 - 1.0i, 7.0 - 3.0i, 7.0 - 1.0i, // 011000 - 011011
-                5.0 - 5.0i, 5.0 - 7.0i, 7.0 - 5.0i, 7.0 - 7.0i, // 011100 - 011111
-                -3.0 + 3.0i, -3.0 + 1.0i, -1.0 + 3.0i, -1.0 + 1.0i, // 100000 - 100011
-                -3.0 + 5.0i, -3.0 + 7.0i, -1.0 + 5.0i, -1.0 + 7.0i, // 100100 - 100111
-                -5.0 + 3.0i, -5.0 + 1.0i, -7.0 + 3.0i, -7.0 + 1.0i, // 101000 - 101011
-                -5.0 + 5.0i, -5.0 + 7.0i, -7.0 + 5.0i, -7.0 + 7.0i, // 101100 - 101111
-                -3.0 - 3.0i, -3.0 - 1.0i, -1.0 - 3.0i, -1.0 - 1.0i, // 110000 - 110011
-                -3.0 - 5.0i, -3.0 - 7.0i, -1.0 - 5.0i, -1.0 - 7.0i, // 110100 - 110111
-                -5.0 - 3.0i, -5.0 - 1.0i, -7.0 - 3.0i, -7.0 - 1.0i, // 111000 - 111011
-                -5.0 - 5.0i, -5.0 - 7.0i, -7.0 - 5.0i, -7.0 - 7.0i  // 111100 - 111111
-            };
-            for (size_t i = 0; i < constellation.size(); ++i) {
-                constellation[i] = constellation[i] / std::sqrt(42); 
+            constellation = QAM64_MAP;
+            for (auto& point : constellation) {
+                point /= std::sqrt(42);
             }
             break;
     }

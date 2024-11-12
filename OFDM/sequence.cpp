@@ -1,5 +1,6 @@
 ﻿#include "sequence.h"
 #include <iostream>
+#include <cstdint>
 
 
 void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vector<std::vector<cd>>>& refs) {

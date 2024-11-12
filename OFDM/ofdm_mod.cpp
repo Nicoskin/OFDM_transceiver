@@ -9,13 +9,10 @@ namespace {
 }
 
 
-OFDM_mod::OFDM_mod()
-    : N_rb((N_FFT - G_SUBCAR - 1) / 12), // Инициализация N_rb
-      refs(20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0)))) // Инициализация refs
-{
-    N_active_subcarriers = N_FFT - G_SUBCAR - N_PILOTS -1; 
+OFDM_mod::OFDM_mod() 
+{ 
     generateIndices();  // Генерируем индексы данных и пилотов при инициализации
-    gen_pilots_siq(pilot_indices, refs);
+    gen_pilots_siq(data.pilot_indices, data.refs);
     
     if (CP_LEN == 0) CP_len = N_FFT / 12.8;
     else CP_len = N_FFT / 4;
@@ -39,8 +36,8 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
         output.insert(output.end(), mapped_pss.begin(), mapped_pss.end());
         
         for (int k = 0; k < OFDM_SYM_IN_SLOT; ++k) {
-            std::vector<cd> ofdm_symbol(input_symbols.begin() +  k      * (N_active_subcarriers-1)   + k,
-                                        input_symbols.begin() + (k + 1) * (N_active_subcarriers-1)+1 + k); // +1 для включения последнего элемента
+            std::vector<cd> ofdm_symbol(input_symbols.begin() +  k      * (data.N_active_subcarriers-1)   + k,
+                                        input_symbols.begin() + (k + 1) * (data.N_active_subcarriers-1)+1 + k); // +1 для включения последнего элемента
 
             ofdm_symbol = mapData(ofdm_symbol);
             ofdm_symbol = mapPilots(ofdm_symbol, n_slot, k);
@@ -78,17 +75,16 @@ std::vector<cd> OFDM_mod::modulate(const std::vector<std::vector<cd>> &input_mat
 }
 
 void OFDM_mod::generateIndices() {
-    data_indices.clear();
-    data_indices_noPilots.clear();
-    data_indices_shifted.clear();
-    pilot_indices.clear();
-    pilot_indices_shifted.clear();
+    data.data_indices.clear();
+    data.data_indices_noPilots.clear();
+    data.data_indices_shifted.clear();
+    data.pilot_indices.clear();
+    data.pilot_indices_shifted.clear();
 
     int left_active = G_SUBCAR / 2 + 1;
     int middle_subcarrier = N_FFT / 2;
-    int total_active = (N_active_subcarriers + N_PILOTS + 1);
-    int pilot_interval = total_active  / (N_PILOTS - 1);
-
+    int total_active = (data.N_active_subcarriers + N_PILOTS + 1);
+    int pilot_interval = total_active / (N_PILOTS - 1);
     int shift = 0;
     shift = shift % 6;
 
@@ -101,23 +97,22 @@ void OFDM_mod::generateIndices() {
             continue;
         }
 
-        data_indices_noPilots.push_back(current_subcarrier);
+        data.data_indices_noPilots.push_back(current_subcarrier);
 
-        // Расстановка пилотов во второй половине поднесущих
-        if      ((i > (total_active - 1) / 2) && 
-                 (i % pilot_interval == (shift + 1) % 6) && 
-                 pilot_indices.size() < N_PILOTS) {
-                 pilot_indices.push_back(current_subcarrier);
+        if ((i > (total_active - 1) / 2) && 
+            (i % pilot_interval == (shift + 1) % 6) && 
+            data.pilot_indices.size() < N_PILOTS) {
+            data.pilot_indices.push_back(current_subcarrier);
         }
         // Расстановка пилотов в первой половине поднесущих
         else if ((i < (total_active - 1) / 2) && 
-                 (i % pilot_interval ==  shift         ) && 
-                 pilot_indices.size() < N_PILOTS) {
-                 pilot_indices.push_back(current_subcarrier);
+                 (i % pilot_interval == shift) && 
+                 data.pilot_indices.size() < N_PILOTS) {
+            data.pilot_indices.push_back(current_subcarrier);
         }
         // Остальные поднесущие используются для передачи данных
         else {
-            data_indices.push_back(current_subcarrier);
+            data.data_indices.push_back(current_subcarrier);
         }
     }
 
@@ -129,28 +124,27 @@ void OFDM_mod::generateIndices() {
             continue;
         }
 
-        if      ((i > (total_active - 1) / 2) && 
-                 (i % pilot_interval == (shift + 1 + 3) % 6) && 
-                 pilot_indices_shifted.size() < N_PILOTS) {
-                 pilot_indices_shifted.push_back(current_subcarrier);
+        if ((i > (total_active - 1) / 2) && 
+            (i % pilot_interval == (shift + 1 + 3) % 6) && 
+            data.pilot_indices_shifted.size() < N_PILOTS) {
+            data.pilot_indices_shifted.push_back(current_subcarrier);
         }
         else if ((i < (total_active - 1) / 2) && 
-                 (i % pilot_interval == (shift +     3) % 6) && 
-                 pilot_indices_shifted.size() < N_PILOTS) {
-                 pilot_indices_shifted.push_back(current_subcarrier);
+                 (i % pilot_interval == (shift + 3) % 6) && 
+                 data.pilot_indices_shifted.size() < N_PILOTS) {
+            data.pilot_indices_shifted.push_back(current_subcarrier);
         }
         else {
-            data_indices_shifted.push_back(current_subcarrier);
+            data.data_indices_shifted.push_back(current_subcarrier);
         }
     }
-
-
 }
+
 
 
 std::vector<cd> OFDM_mod::mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol) {
 
-    std::vector<cd> pilots_val = refs[num_slot%20][num_symbol];
+    std::vector<cd> pilots_val = data.refs[num_slot%20][num_symbol];
     // std::cout << "num_slot = " << num_slot << "  num_symbol = " << num_symbol <<  std::endl;
     // for(auto i : pilots_val) {
     //     std::cout << i << " ";
@@ -158,7 +152,7 @@ std::vector<cd> OFDM_mod::mapPilots(std::vector<cd> &input, uint16_t num_slot, u
     // std::cout << std::endl;
     
     uint16_t k = 0;
-    for (int pilot_index : pilot_indices) {
+    for (int pilot_index : data.pilot_indices) {
         input[pilot_index] = pilots_val[k];
         k++;
     }
@@ -173,7 +167,7 @@ std::vector<cd> OFDM_mod::mapData(const std::vector<cd> &input) {
 
     // Расставляем данные по заранее известным индексам
     int data_index = 0;
-    for (int data_pos : data_indices) {
+    for (int data_pos : data.data_indices) {
         subcarriers[data_pos] = input[data_index++];
     }
     
