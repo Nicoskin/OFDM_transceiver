@@ -20,14 +20,16 @@ struct OFDM_Data {
     std::vector<int> pilot_indices_shifted;
 
     std::vector<std::vector<std::vector<cd>>> refs;
-    int N_rb;
-    int N_active_subcarriers;
+    int N_rb = ((N_FFT - G_SUBCAR - 1) / 12);
+    int N_active_subcarriers = (N_FFT - G_SUBCAR - N_PILOTS - 1);
 
-    OFDM_Data() :   N_rb((N_FFT - G_SUBCAR - 1) / 12),
-                    N_active_subcarriers(N_FFT - G_SUBCAR - N_PILOTS - 1)
-    {
+    OFDM_Data() {
         refs.resize(20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0))));
+        generateIndices();
     }
+    
+private:
+    void generateIndices();
     
 };
 
@@ -46,7 +48,6 @@ private:
     int CP_len;
     OFDM_Data data; 
 
-    void generateIndices();
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
     std::vector<cd> addCyclicPrefix(const std::vector<cd>& time_domain_symbol, int k);
