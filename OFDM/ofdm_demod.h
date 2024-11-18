@@ -44,9 +44,6 @@ private:
 
     //////////////
 
-    std::vector<double> corr_cp_normal(const std::vector<cd>& slot_signal);
-    std::vector<double> corr_cp_extended(const std::vector<cd>& slot_signal);
-
     std::vector<int> find_ind_cp_normal(const std::vector<double>& corr_cp);
     std::vector<int> find_ind_cp_extended(const std::vector<double>& corr_cp);
 

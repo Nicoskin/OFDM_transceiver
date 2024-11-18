@@ -51,15 +51,33 @@ void saveCD(const std::vector<cd>& arr, const std::string& filename) {
     }
 }
 
+std::vector<double> corr_cp_extended(const std::vector<cd>& slot_signal) {
+    std::vector<double> corr(slot_signal.size(), 0.0);
+    int CP_len = 9;
+    OFDM_demod ofdm_demod;
 
+    for (int i = 0; i <= slot_signal.size() - N_FFT - CP_len; ++i) {   
+        std::vector<cd> first_win(slot_signal.begin() + i, slot_signal.begin() + i + CP_len);
+        std::vector<cd> second_win(slot_signal.begin() + i + N_FFT, slot_signal.begin() + i + N_FFT + CP_len);
+        
+        std::vector<double> correlat = ofdm_demod.correlation(first_win, second_win);
+        
+        double correlat_cp = 0.0;
+        for (auto var : correlat) correlat_cp += std::abs(var);
+                
+        corr[i] = correlat_cp;
+    }
+
+    return corr;
+}
 
 int main() {
     omp_set_num_threads(8);
     std::cout << "-----TX-----" << std::endl;
 
-    auto bits = generateRandBits(680*1, 2);
+    //auto bits = generateRandBits(680*1, 2);
     //auto bits = string2bits("Hello, World! Привет, Мир! 1234567890");
-    //auto bits = file2bits("test_file_in/арбуз арбуз.jpeg");
+    auto bits = file2bits("test_file_in/арбуз арбуз.jpeg");
     
     Segmenter segmenter;
     auto segments = segmenter.segment(bits, 0); // Flag: 0 случайные биты, 1 - текст, 2 - файл
@@ -73,7 +91,7 @@ int main() {
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
     double SNR_dB = 20.0;
-    auto signal = pad_zeros(ofdm_data, 1000, 1000);
+    auto signal = pad_zeros(ofdm_data, 1020, 1000);
     signal = add_CFO(signal, 6500);
     //signal = add_Channel(signal, {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}});
     auto noise_signal = add_noise(signal, SNR_dB, 1);
@@ -103,12 +121,14 @@ int main() {
     if      (flag == 1) bits2string(data);
     else if (flag == 2) bits2file("test_file_out/", data);
 
-
+    auto corr = corr_cp_extended(noise_signal_cfo);
     // cool_plot(data, "-o", "data");
     // cool_plot(noise_signal,"-", "noise_signal");
     // cool_plot(noise_signal_cfo,"-", "noise_signal_cfo");
     // cool_scatter(std::vector<cd>(demod_signal.begin(), demod_signal.begin() + 1000), "demod_signal");
+    spectrogram_plot(noise_signal_cfo, "noise_signal_cfo");
     cool_scatter(demod_signal, "demod_signal");
+    cool_plot(corr, "corr");
     show_plot();
 
     return 0;

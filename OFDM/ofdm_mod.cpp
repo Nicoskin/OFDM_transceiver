@@ -67,11 +67,7 @@ std::vector<cd> OFDM_mod::addCyclicPrefix(const std::vector<cd>& time_domain_sym
 
     // Определение длины циклического префикса на основе индекса символа
     if (CP_LEN == 0) {
-        if (k == 0) {
-            cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
-        } else {
-            cp.assign(time_domain_symbol.end() - CP_len * 0.9, time_domain_symbol.end());
-        }
+        cp.assign(time_domain_symbol.end() - CP_len * 0.9, time_domain_symbol.end());
     } else {
         cp.assign(time_domain_symbol.end() - CP_len, time_domain_symbol.end());
     }

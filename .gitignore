@@ -2,3 +2,4 @@
 *.exe
 */test/test
 /test/*/test
+build/

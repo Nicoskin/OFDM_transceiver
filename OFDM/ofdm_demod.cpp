@@ -12,7 +12,7 @@ namespace {
 }
 
 OFDM_demod::OFDM_demod(){
-    if (CP_LEN == 0) CP_len = N_FFT / 12.8;
+    if (CP_LEN == 0) CP_len = N_FFT / 12.8 * 0.9;
     else CP_len = N_FFT / 4;
 };
 
@@ -233,37 +233,8 @@ std::vector<cd> OFDM_demod::extract_symb(const std::vector<cd>& signal, const st
 }
 
 
-std::vector<double> OFDM_demod::corr_cp_normal(const std::vector<cd>& slot_signal) {
-    std::vector<double> corr;//(slot_signal.size(), 0.0);
 
-    int CP_len_b = CP_len;
-    for (int i = 0; i < CP_len_b; ++i) {
-        std::vector<cd> first_win(slot_signal.begin() + i, slot_signal.begin() + i + CP_len_b);
-        std::vector<cd> second_win(slot_signal.begin() + i + N_FFT, slot_signal.begin() + i + N_FFT + CP_len_b);
-        std::vector<double> correlat = correlation(first_win, second_win);
-
-        double correlat_cp = 0.0;
-        for (auto var : correlat) {
-            correlat_cp += var;
-        }
-        corr.push_back(correlat_cp);
-    }
-
-    int CP_len_s = CP_len * 0.9;
-    for (int i = CP_len_b; i <= slot_signal.size() - N_FFT-CP_len_s; ++i) {
-        std::vector<cd> first_win(slot_signal.begin() + i, slot_signal.begin() + i + CP_len_s);
-        std::vector<cd> second_win(slot_signal.begin() + i + N_FFT, slot_signal.begin() + i + N_FFT + CP_len_s);
-        std::vector<double> correlat = correlation(first_win, second_win);
-
-        double correlat_cp = 0.0;
-        for (auto var : correlat) correlat_cp += var;
-        corr.push_back(correlat_cp);
-    }
-    return corr;
-
-}
-
-std::vector<double> OFDM_demod::corr_cp_extended(const std::vector<cd>& slot_signal) {
+std::vector<double> OFDM_demod::corr_cp(const std::vector<cd>& slot_signal) {
     std::vector<double> corr(slot_signal.size(), 0.0);
 
     for (int i = 0; i <= slot_signal.size() - N_FFT - CP_len; ++i) {   
@@ -281,32 +252,21 @@ std::vector<double> OFDM_demod::corr_cp_extended(const std::vector<cd>& slot_sig
     return corr;
 }
 
-std::vector<double> OFDM_demod::corr_cp(const std::vector<cd>& slot_signal) {
-    std::vector<double> corr(slot_signal.size(), 0.0);
-
-    if (CP_LEN == 0) corr = corr_cp_normal(slot_signal);
-    else             corr = corr_cp_extended(slot_signal);
-
-    return corr;
-}
-
 
 std::vector<int> OFDM_demod::find_ind_cp_normal(const std::vector<double>& corr_cp) {
     std::vector<int> indices;
-    int CP_length = N_FFT / 12.8;
 
     // Первый интервал: от 0 до (N_FFT + CP_LEN) / 2
-    int first_end = (N_FFT + CP_length) / 2;
+    int first_end = (N_FFT + CP_len) / 2;
     auto max_it_first = std::max_element(corr_cp.begin(), corr_cp.begin() + first_end);
     int max_index_first = std::distance(corr_cp.begin(), max_it_first);
     indices.push_back(max_index_first);
 
-    CP_length = CP_length * 0.9;
 
     // Остальные интервалы: с шага (N_FFT + CP_LEN) начиная с first_end
-    for (int i = first_end; i < corr_cp.size(); i += N_FFT + CP_length) {
+    for (int i = first_end; i < corr_cp.size(); i += N_FFT + CP_len) {
         // Определяем конец текущего интервала, не превышая длину corr_cp
-        int end = std::min(i + N_FFT + CP_length, static_cast<int>(corr_cp.size()));
+        int end = std::min(i + N_FFT + CP_len, static_cast<int>(corr_cp.size()));
 
         // Находим индекс максимального значения в текущем интервале
         auto max_it = std::max_element(corr_cp.begin() + i, corr_cp.begin() + end);
@@ -321,18 +281,17 @@ std::vector<int> OFDM_demod::find_ind_cp_normal(const std::vector<double>& corr_
 
 std::vector<int> OFDM_demod::find_ind_cp_extended(const std::vector<double>& corr_cp) {
     std::vector<int> indices;
-    int CP_length = N_FFT / 4;
-
+    
     // Первый интервал: от 0 до (N_FFT + CP_LEN) / 2
-    int first_end = (N_FFT + CP_length) / 2;
+    int first_end = (N_FFT + CP_len) / 2;
     auto max_it_first = std::max_element(corr_cp.begin(), corr_cp.begin() + first_end);
     int max_index_first = std::distance(corr_cp.begin(), max_it_first);
     indices.push_back(max_index_first);
 
     // Остальные интервалы: с шага (N_FFT + CP_LEN) начиная с first_end
-    for (int i = first_end; i < corr_cp.size()-N_FFT-CP_length; i += N_FFT + CP_length) {
+    for (int i = first_end; i < corr_cp.size()-N_FFT-CP_len; i += N_FFT + CP_len) {
         // Определяем конец текущего интервала, не превышая длину corr_cp
-        int end = std::min(i + N_FFT + CP_length, static_cast<int>(corr_cp.size()));
+        int end = std::min(i + N_FFT + CP_len, static_cast<int>(corr_cp.size()));
 
         // Находим индекс максимального значения в текущем интервале
         auto max_it = std::max_element(corr_cp.begin() + i, corr_cp.begin() + end);
