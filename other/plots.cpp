@@ -2,6 +2,7 @@
 #include <vector>
 #include <complex>
 #include <algorithm>
+#include "../OFDM/fft/fft.h"
 #include "plots.h" 
 
 namespace plt = matplotlibcpp;
@@ -118,6 +119,71 @@ void cool_scatter(const std::vector<cd>& data, const std::string title, bool sho
         plt::show();
         plt::detail::_interpreter::kill();
     } 
+}
+
+
+void spectrogram_plot(const std::vector<cd>& input, const std::string& title, size_t FFT_Size, bool show_plot) {
+    if (input.size() < FFT_Size) {
+        throw std::invalid_argument("Input size must be greater than or equal to FFT_Size.");
+    }
+
+    size_t num_blocks = input.size() / FFT_Size;  // Число блоков
+    std::vector<std::vector<float>> spectrogram(num_blocks, std::vector<float>(FFT_Size, 0.0f));
+
+    // Разбиваем входной сигнал на блоки и вычисляем FFT
+    for (size_t block = 0; block < num_blocks; ++block) {
+        std::vector<cd> block_data(input.begin() + block * FFT_Size, input.begin() + (block + 1) * FFT_Size);
+
+        // Выполняем FFT (реализуйте свою FFT функцию или используйте библиотеку)
+        auto fft_result = fft(block_data);
+        fft_result = fftshift(fft_result);
+
+        // Считаем амплитуды спектра
+        for (size_t k = 0; k <= FFT_Size; ++k) {  // Только положительные частоты
+            spectrogram[block][k] = static_cast<float>(std::abs(fft_result[k]));
+        }
+    }
+
+    // Транспонируем спектрограмму
+    std::vector<std::vector<float>> transposed_spectrogram(FFT_Size, std::vector<float>(num_blocks, 0.0f));
+    for (size_t i = 0; i < num_blocks; ++i) {
+        for (size_t j = 0; j < FFT_Size; ++j) {
+            transposed_spectrogram[j][i] = spectrogram[i][j];
+        }
+    }
+
+    // Преобразуем транспонированную спектрограмму в одномерный массив для imshow
+    std::vector<float> flattened_spectrogram;
+    for (const auto& row : transposed_spectrogram) {
+        flattened_spectrogram.insert(flattened_spectrogram.end(), row.begin(), row.end());
+    }
+
+    // Построение спектрограммы
+    plt::figure_size(1200, 600); 
+    plt::subplots_adjust({{"left", 0.07}, {"bottom", 0.08}, {"right", 0.95}, {"top", 0.96}});
+    plt::title(title);
+
+
+    plt::imshow(flattened_spectrogram.data(), 
+                static_cast<int>(FFT_Size),  // Теперь строки — это частоты
+                static_cast<int>(num_blocks),  // А столбцы — временные блоки
+                1, 
+                {{"aspect", "auto"}, {"cmap", "turbo"}}); // Aspect ratio, чтобы ширина была фиксированной
+
+    // Для цветовой шкалы
+    // PyObject* mat;
+    // plt::imshow(flattened_spectrogram.data(), 
+    //             static_cast<int>(FFT_Size),  // Теперь строки — это частоты
+    //             static_cast<int>(num_blocks),  // А столбцы — временные блоки
+    //             1, {}, &mat); // Aspect ratio, чтобы ширина была фиксированной
+    // plt::colorbar(mat);
+
+    plt::xlabel("Symbols");
+    plt::ylabel("Subcarriers");
+
+    if (show_plot) {
+        plt::show();
+    }
 }
 
 void show_plot() {
