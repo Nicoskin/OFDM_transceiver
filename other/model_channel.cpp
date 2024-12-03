@@ -49,19 +49,19 @@ std::vector<cd> add_CFO(std::vector<cd>& signal, double CFO, uint32_t F_srate) {
     return signal_CFO;
 }
 
-std::vector<std::complex<double>> pad_zeros(const std::vector<std::complex<double>>& signal,  size_t num_zeros_front, size_t num_zeros_back) {
+std::vector<cd> pad_zeros(const std::vector<cd>& signal,  size_t num_zeros_front, size_t num_zeros_back) {
     // Создаем новый вектор с необходимым размером
-    std::vector<std::complex<double>> padded_signal;
+    std::vector<cd> padded_signal;
     padded_signal.reserve(num_zeros_front + signal.size() + num_zeros_back);
 
     // Добавляем нули в начало
-    padded_signal.insert(padded_signal.end(), num_zeros_front, std::complex<double>(0.0, 0.0));
+    padded_signal.insert(padded_signal.end(), num_zeros_front, cd(0.0, 0.0));
 
     // Копируем оригинальный сигнал
     padded_signal.insert(padded_signal.end(), signal.begin(), signal.end());
 
     // Добавляем нули в конец
-    padded_signal.insert(padded_signal.end(), num_zeros_back, std::complex<double>(0.0, 0.0));
+    padded_signal.insert(padded_signal.end(), num_zeros_back, cd(0.0, 0.0));
 
     return padded_signal;
 }

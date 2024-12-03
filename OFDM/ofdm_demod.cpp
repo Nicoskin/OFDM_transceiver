@@ -214,12 +214,8 @@ std::vector<cd> OFDM_demod::extract_symb(const std::vector<cd>& signal, const st
     if (n_symb >= indices.size()) {
         throw std::out_of_range("Неверный номер слота");
     }
-    int cp_len;
-    if ((CP_LEN == 0)&&(n_symb == 0)) cp_len = N_FFT / 12.8;
-    else if (CP_LEN == 0) cp_len = N_FFT / 12.8 * 0.9;
-    else cp_len = N_FFT / 4;
 
-    int start_index = indices[n_symb] + cp_len;
+    int start_index = indices[n_symb] + CP_len;
     int end_index = start_index + N_FFT;
     //std::cout << start_index << " " << end_index << std::endl;
 

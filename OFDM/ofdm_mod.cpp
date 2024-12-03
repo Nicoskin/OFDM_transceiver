@@ -193,7 +193,7 @@ std::vector<cd> OFDM_mod::mapPSS(int u) {
 
     int left_active = (N_FFT / 2) - 31;
     
-    uint16_t k = 0;
+    uint8_t k = 0;
     for (int i = 0; i < 63; ++i) {
         if (i==31) subcarriers[left_active + i] = 0;
         else subcarriers[left_active + i] = pss[k++]; 
@@ -207,13 +207,14 @@ std::vector<cd> OFDM_mod::mapPSS(int u) {
 }
 
 // Маппинг PSS, ifft над PSS
-std::vector<cd> OFDM_mod::mapSSS(int N_ID_cell) {
+std::vector<cd> OFDM_mod::mapSSS(int N_ID_cell, int subframe) {
     std::vector<cd> subcarriers(N_FFT, 0);
-    auto sss = generate_sss(N_ID_cell);
+    auto sss = generate_sss(N_ID_cell, subframe);
+    return sss;
 
     int left_active = (N_FFT / 2) - 31;
 
-    uint16_t k = 0;
+    uint8_t k = 0;
     for (int i = 0; i < 63; ++i) {
         if (i==31) subcarriers[left_active + i] = 0;
         else subcarriers[left_active + i] = sss[k++]; 

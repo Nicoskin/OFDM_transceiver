@@ -4,11 +4,11 @@
 
 // Конструктор класса Segmenter
 Segmenter::Segmenter(
-    uint32_t maxLenLine,
-    uint32_t segmentNumBits,
-    uint32_t usefulBits,
-    uint32_t crcBits,
-    uint16_t flagBits)
+    uint16_t maxLenLine,
+    uint8_t segmentNumBits,
+    uint8_t usefulBits,
+    uint8_t crcBits,
+    uint8_t flagBits)
     : maxLenLine(maxLenLine), segmentNumBits(segmentNumBits),
       usefulBits(usefulBits), crcBits(crcBits), flagBits(flagBits) {}
 

@@ -120,38 +120,90 @@ std::vector<double> corr_cp_extended(const std::vector<cd>& slot_signal) {
     return corr;
 }
 
+void pss_spec(const std::vector<cd>& signal, int first_ind_pss) {
+    std::vector<cd> all;
+    for(size_t i=0; i < 50; i++){
+    std::vector<cd> one_symb(signal.begin() + first_ind_pss + i, signal.begin() + first_ind_pss + i + N_FFT);
+    // auto ff = fft(one_symb);
+    // ff = fftshift(ff);
+    all.insert(all.end(), one_symb.begin(), one_symb.end());
+    }
+    spectrogram_plot(all);
+}
+
 int main() { 
     // Чтение данных из файлов и создание вектора комплексных чисел
     //std::vector<cd> complexVector = readComplexVector("rx_imag_file.txt", "rx_real_file.txt");
     std::vector<cd> complexVector = readComplexNumbersFromFile("rx_file_complex_fs_1.92.txt");
-    //complexVector = std::vector<std::complex<double>>(begin(complexVector), begin(complexVector) + 30000);
+    //complexVector = std::vector<std::complex<double>>(begin(complexVector)+45000, begin(complexVector) + 55000);
+    complexVector = std::vector<std::complex<double>>(begin(complexVector)+1000, begin(complexVector) + 2500);
     //std::vector<cd> PSS_PBCH(begin(complexVector)+11000, begin(complexVector)+12500); // 4
  
     OFDM_mod ofdm_mod;
     OFDM_demod ofdm_demod;
     auto pss = ofdm_mod.mapPSS(1);
     auto corr = ofdm_demod.correlation(complexVector, pss);
+    double max_corr = *std::max_element(begin(corr), end(corr));
+    int max_corr_ind = std::distance(begin(corr), std::max_element(begin(corr), end(corr)));
+    std::cout << "Ind PSS: " << max_corr_ind << std::endl;
+    std::cout << "Max PSS: " << max_corr << std::endl;
+    // std::vector<std::complex<double>> noise_signal_cfo;
+    // frequency_correlation(ofdm_mod.mapPSS(1), complexVector, 15000, noise_signal_cfo, 1920000);
+    pss_spec(complexVector, 720);
+    pss_spec(complexVector, 749-128-32+11);
+    
+    std::vector<cd> only_sss = std::vector<cd>(begin(complexVector)+749-128-32+11, begin(complexVector)+749-128-32+11+N_FFT);
+    auto sss_fft = fft(only_sss);
+    sss_fft = fftshift(sss_fft);
+    cool_plot(sss_fft);
 
-    // std::vector<cd> PSS_PBCH_freq;
-    // for(size_t i = 0; i < 1; i++){
-    //     auto ff = fft(std::vector<cd>(begin(PSS_PBCH)+i*128, begin(PSS_PBCH)+(i+1)*128));
-    //     PSS_PBCH_freq.insert(PSS_PBCH_freq.end(), begin(ff), end(ff));
-    // }
-    // cool_scatter(PSS_PBCH_freq, "PSS_PBCH_freq");
+    double max_sss = 0.0;
+    int n_sss = 0;
+    int ind_sss = 0;
+    for(int N_id = 0; N_id < 168; N_id++){
+        auto sss = ofdm_mod.mapSSS(N_id, 5);
+        auto corr_sss = ofdm_demod.correlation(sss_fft, sss);
+        double max_corr_sss = *std::max_element(begin(corr_sss), end(corr_sss));
+        //std::cout << max_corr_sss << " ";
+        n_sss = max_corr_sss > max_sss ? N_id : n_sss;
+        ind_sss = max_corr_sss > max_sss ? std::distance(begin(corr_sss), std::max_element(begin(corr_sss), end(corr_sss))) : ind_sss;
+        max_sss = max_corr_sss > max_sss ? max_corr_sss : max_sss;
+    }
+    std::cout << std::endl;
+    std::cout << "n_sss: " << n_sss << std::endl;
+    std::cout << "max_sss: " << max_sss << std::endl;
+    std::cout << "ind_sss: " << ind_sss << std::endl;
+    /*
+    // std::cout << "N_id: " << n_sss*3 + 1 << std::endl;
 
-    // std::vector<cd> tes;
-    // for(size_t i = 0; i < 400; i++){
-    //     std::vector<cd> ff(begin(PSS_PBCH)+i, begin(PSS_PBCH)+i+128);
-    //     tes.insert(tes.end(), begin(ff), end(ff));
-    // }
-    //spectrogram_plot(tes, 128, "tes");
+    // auto corr_sss = ofdm_demod.correlation(complexVector, sss);
+    // double max_corr_sss = *std::max_element(begin(corr_sss), end(corr_sss));
+    // int max_corr_ind_sss = std::distance(begin(corr_sss), std::max_element(begin(corr_sss), end(corr_sss)));
+    // cool_plot(corr_sss, "Correlation with SSS");
+    std::vector<cd> only_pss(begin(complexVector)+730, begin(complexVector)+730+N_FFT);
+    auto pss_fft = fft(only_pss);
+    pss_fft = fftshift(pss_fft);
+    cool_scatter(pss_fft, "PSS FFT");
+    for(auto & var : pss_fft) var = std::abs(var);
+    cool_plot(pss_fft, "PSS FFT");
 
-    //auto corr = corr_cp_extended(complexVector);
 
-    cool_plot(corr);
-    // cool_plot(complexVector);
+    std::vector<cd> only_sss(begin(complexVector)+593, begin(complexVector)+593+N_FFT);
+    auto sss_fft = fft(only_sss);
+    sss_fft = fftshift(sss_fft);
+    cool_scatter(sss_fft, "SSS FFT");
+    //for(auto & var : sss_fft) var = std::abs(var);
+    cool_plot(sss_fft, "SSS FFT");
+
+    auto corr_cp = corr_cp_extended(complexVector);
+    cool_plot(corr_cp, "Correlation with CP");
+
+
+    // cool_plot(corr, "Correlation with PSS");
+    cool_plot(complexVector);
     spectrogram_plot(complexVector);
-
+    // spectrogram_plot(noise_signal_cfo);
+    */
 
 
     show_plot();

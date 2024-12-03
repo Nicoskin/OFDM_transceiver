@@ -25,7 +25,8 @@ include_directories(
 
 # Указать исходные файлы
 set(SOURCE_FILES
-    test.cpp
+    main.cpp
+    chat.cpp
     sdr_settings.cpp
     view_OFDM_settings.cpp
     ../../QAM/qam_mod.cpp
