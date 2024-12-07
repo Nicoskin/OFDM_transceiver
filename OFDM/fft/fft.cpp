@@ -62,7 +62,7 @@ std::vector<cd> fft(const std::vector<cd>& num) {
             }
         }
     }
-
+    std::reverse(fft_image.begin(), fft_image.end()); 
     return fft_image;
 }
 
