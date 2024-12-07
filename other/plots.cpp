@@ -122,7 +122,7 @@ void cool_scatter(const std::vector<cd>& data, const std::string title, bool sho
 }
 
 
-void spectrogram_plot(const std::vector<cd>& input, const std::string& title, size_t FFT_Size, bool show_plot) {
+void spectrogram_plot(const std::vector<cd>& input, const std::string& title, bool mirror_mid, size_t FFT_Size, bool show_plot) {
     if (input.size() < FFT_Size) {
         throw std::invalid_argument("Input size must be greater than or equal to FFT_Size.");
     }
@@ -180,6 +180,9 @@ void spectrogram_plot(const std::vector<cd>& input, const std::string& title, si
 
     plt::xlabel("Symbols");
     plt::ylabel("Subcarriers");
+    if (mirror_mid) {
+        plt::ylim(-0.5, N_FFT-0.5);
+    }
 
     if (show_plot) {
         plt::show();

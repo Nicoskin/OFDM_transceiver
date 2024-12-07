@@ -28,7 +28,7 @@ void cool_plot(const std::vector<T>& input,
 
 void cool_scatter(const std::vector<cd>& x, const std::string title = "", bool show_plot = false);
 
-void spectrogram_plot(const std::vector<cd>& input, const std::string& title = "", size_t FFT_Size = N_FFT, bool show_plot = false);
+void spectrogram_plot(const std::vector<cd>& input, const std::string& title = "", bool mirror_mid = true, size_t FFT_Size = N_FFT, bool show_plot = false);
 
 void show_plot();
 
