@@ -163,12 +163,12 @@ int main() {
     }
     // Частотная по PSS
     std::vector<cd> signal_cfo;
-    frequency_correlation(ofdm_mod.mapPSS(pss_root), complexVector, 15000, signal_cfo, 1920000);
+    frequency_correlation(ofdm_mod.mapPSS(pss_root), one_frame, 15000, signal_cfo, 1920000);
     one_frame = signal_cfo;
 
     int sss_root = -1;
     int index_first_pss = 0;
-    auto sss_fft = fft(std::vector<cd>(one_frame.begin() + indices_pss[0] - 137+1, one_frame.begin() + indices_pss[0] - 9+1));
+    auto sss_fft = fft(std::vector<cd>(one_frame.begin() + indices_pss[0] - 137, one_frame.begin() + indices_pss[0] - 9));
     sss_fft = fftshift(sss_fft);
 
     for(size_t subframe = 0; subframe <= 5; subframe += 5){
