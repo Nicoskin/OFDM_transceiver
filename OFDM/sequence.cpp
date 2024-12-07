@@ -105,19 +105,21 @@ std::vector<cd> ZadoffChu(int u) {
 }
 
 // Функция для генерации SSS
-std::vector<cd> generate_sss(int N_ID_cell, int subframe) {
+std::vector<cd> generate_sss(int N_ID_cell, int subframe, bool add_zero_middle) {
     if (subframe != 0 && subframe != 5) {
         throw std::invalid_argument("Subframe must be 0 or 5");
     }
+    int N_ID_1 = (N_ID_cell - (N_ID_cell % 3)) / 3;
+    int N_ID_2 = N_ID_cell % 3;
+    // std::cout << "N_ID_1: " << N_ID_1 << " N_ID_2: " << N_ID_2 << std::endl;
+
     // Шаг 2: Вычисление промежуточных значений
-    int q_prime = N_ID_cell / 30;
-    int q = (N_ID_cell + q_prime * (q_prime + 1) / 2) / 30;
-    int m_prime = N_ID_cell + q * (q + 1) / 2;
+    int q_prime = N_ID_1 / 30;
+    int q = (N_ID_1 + q_prime * (q_prime + 1) / 2) / 30;
+    int m_prime = N_ID_1 + q * (q + 1) / 2;
     int m0 = m_prime % 31;
     int m1 = (m0 + (m_prime / 31) + 1) % 31;
 
-    int N_ID_2 = N_ID_cell % 3;
-    
     //std::cout << "m0: " << m0 << " m1: " << m1 << std::endl;
 
     // Шаг 3: Генерация последовательности x_s для s_tilda
@@ -163,7 +165,7 @@ std::vector<cd> generate_sss(int N_ID_cell, int subframe) {
 
     std::vector<int8_t> c0_n(31, 0);
     for (int n = 0; n < 31; ++n) {
-        c0_n[n] = c_tilda[(n + N_ID_cell) % 31];
+        c0_n[n] = c_tilda[(n + N_ID_2) % 31];
     }
     std::vector<int8_t> c1_n(31, 0);
     for (int n = 0; n < 31; ++n) {
@@ -201,6 +203,10 @@ std::vector<cd> generate_sss(int N_ID_cell, int subframe) {
         for (int8_t val : d_2n_sub5) {
             result.emplace_back(static_cast<double>(val), 0);
         }
+    }
+    
+    if (add_zero_middle) {
+        result.insert(result.begin() + result.size() / 2, (0, 0));
     }
 
     return result;
