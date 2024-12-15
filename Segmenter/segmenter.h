@@ -26,6 +26,8 @@ public:
     std::vector<uint8_t> extract_data(const std::vector<std::vector<uint8_t>>& bits);
                 uint8_t  extract_flag(const std::vector<std::vector<uint8_t>>& bits);
 
+    std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
+    
     void get_size_data_in_slot() const;
 
 private:
@@ -39,7 +41,6 @@ private:
     uint16_t maxLenLineInSegment;
     uint16_t totalSegments;
 
-    std::vector<int> checkCRC(const std::vector<std::vector<uint8_t>>& segments);
     uint64_t computeCRC(const std::vector<uint8_t>& data);
 };
 
