@@ -23,9 +23,10 @@ struct OFDM_Data {
     int N_rb = ((N_FFT - G_SUBCAR - 1) / 12);
     int N_active_subcarriers = (N_FFT - G_SUBCAR - N_PILOTS - 1);
 
-    OFDM_Data() {
+    OFDM_Data(bool amp_pilots_high = false) {
         refs.resize(20, std::vector<std::vector<cd>>(7, std::vector<cd>(N_rb * 2, cd(0, 0))));
         generateIndices();
+        gen_pilots_siq(refs, N_CELL_ID, amp_pilots_high);
     }
     
 private:
@@ -36,7 +37,7 @@ private:
 
 class OFDM_mod {
 public:
-    OFDM_mod();
+    OFDM_mod(bool amplitude_pilots_high = true);
 
     std::vector<cd> modulate(const std::vector<std::vector<cd>> &input_matrix);
     std::vector<cd> mapPSS(int u = N_CELL_ID % 3);
@@ -46,7 +47,8 @@ public:
 
 private:
     int CP_len;
-    OFDM_Data data; 
+    bool amplitude_pilots_high;
+    OFDM_Data data = OFDM_Data(amplitude_pilots_high); 
 
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);

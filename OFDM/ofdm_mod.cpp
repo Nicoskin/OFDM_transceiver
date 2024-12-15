@@ -9,10 +9,8 @@ namespace {
 }
 
 
-OFDM_mod::OFDM_mod() 
+OFDM_mod::OFDM_mod(bool amplitude_pilots_high) : amplitude_pilots_high(amplitude_pilots_high)
 { 
-    gen_pilots_siq(data.pilot_indices, data.refs);
-    
     if (CP_LEN == 0) CP_len = N_FFT / 12.8;
     else CP_len = N_FFT / 4;
 };
