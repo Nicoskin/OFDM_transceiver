@@ -19,7 +19,7 @@ OFDM_demod::OFDM_demod(){
 std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     std::vector<cd> demod_signal;
     OFDM_mod ofdm_mod;
-    const OFDM_Data& data = ofdm_mod.getData();
+    const OFDM_Data data;
     auto pss = ofdm_mod.mapPSS();
     auto corr_pss = correlation(signal, pss);
     auto indexs_pss = find_ind_pss(corr_pss, 0.87); // threshold - регулируемый порог
@@ -31,7 +31,7 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     // Параллелизация цикла по слотам
     #pragma omp parallel for
     for (size_t n_slot = 0; n_slot < indexs_pss.size(); ++n_slot) {
-        demod_slot_results[n_slot] = demodulateSlot(signal, n_slot, indexs_pss, data.data_indices);
+        demod_slot_results[n_slot] = demodulateSlot(signal, n_slot, indexs_pss, data);
 
         // Отображение прогресса если много слотов
         if (indexs_pss.size() >= 50) {
@@ -52,11 +52,12 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
 }
 
 // Извлекает и демодулирует каждый слот
-std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const std::vector<int>& data_indices) {
+std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const OFDM_Data &data) {
     auto one_slot = extract_slots(signal, indexs_pss, n_slot);
     auto corr_cp_arr = corr_cp(one_slot);
     auto indexs_cp = find_ind_cp(corr_cp_arr);
     std::vector<cd> demod_slot;
+    auto data_indices = data.data_indices;
 
     // Цикл по каждому символу в слоте
     #pragma omp parallel for
@@ -64,14 +65,16 @@ std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t
         auto one_symb = extract_symb(one_slot, indexs_cp, n_symb);
         auto one_symb_freq = fft(one_symb);
         one_symb_freq = fftshift(one_symb_freq);
-        auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb);
+        auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb, data);
 
         // Деление на оценку канала
         one_symb_freq = divideByChannel(one_symb_freq, inter_H);
-
         // Сохраняем только данные
-        for (auto ind : data_indices) {
-            demod_slot.push_back(one_symb_freq[ind]);
+        #pragma omp critical
+        {
+            for (auto ind : data_indices) {
+                demod_slot.push_back(one_symb_freq[ind]);
+            }
         }
     }
 
@@ -310,11 +313,9 @@ std::vector<int> OFDM_demod::find_ind_cp(const std::vector<double>& corr_cp) {
 }
 
 
-std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb) {
+std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb, const OFDM_Data &data) {
     std::vector<cd> H_channel(N_PILOTS);
     std::vector<cd> interpolated_signal(N_FFT);
-    OFDM_mod ofdm_mod;
-    const OFDM_Data& data = ofdm_mod.getData();
 
     std::vector<int> pilots_ind = data.pilot_indices;
     auto pilot_val = data.refs[n_slot%20][n_symb];

@@ -9,6 +9,7 @@
 #include <omp.h>
 #include <chrono>
 
+#include "ofdm_mod.h"
 #include "../config.h"
 
 using cd = std::complex<double>;
@@ -27,7 +28,7 @@ public:
 private:
     int CP_len;
 
-    std::vector<cd> demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const std::vector<int>& data_indices);
+    std::vector<cd> demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const OFDM_Data &data);
     std::vector<cd> divideByChannel(const std::vector<cd>& one_symb_freq, const std::vector<cd>& inter_H);
     void displayProgress(size_t n_slot, size_t total_slots);
 
@@ -40,7 +41,7 @@ private:
     std::vector<cd> extract_symb (const std::vector<cd>& signal, const std::vector<int>& indices, int n_symb);
 
     std::vector<double> corr_cp(const std::vector<cd>& slot_signal);
-    std::vector<cd> interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb);
+    std::vector<cd> interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb, const OFDM_Data &data) ;
 
     //////////////
 
