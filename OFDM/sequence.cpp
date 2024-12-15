@@ -3,17 +3,16 @@
 #include <cstdint>
 
 
-void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vector<std::vector<cd>>>& refs) {
+void gen_pilots_siq(std::vector<std::vector<std::vector<cd>>>& refs, int N_cell, bool amp_pilots_high) {
     size_t num_slots = 20;
     size_t num_symbols = 7;
-    size_t num_pilots = pilot_indices.size();
+    size_t num_pilots = N_PILOTS;
     
-    // Изменяем размер матрицы c на 20x7x(pilot_indices.size())
+    // Изменяем размер матрицы c на 20x7x(num_pilots*2)
     std::vector<std::vector<std::vector<int32_t>>> c(num_slots, std::vector<std::vector<int32_t>>(num_symbols, std::vector<int32_t>(num_pilots*2, 0)));
 
-    uint16_t N_cp = 1; // 1 - normal CP, 0 - extended CP 
+    uint16_t N_cp = !CP_LEN; // 1 - normal CP, 0 - extended CP 
     uint16_t N_rb = num_pilots / 2;
-    int N_cell = N_CELL_ID; 
 
     for (size_t ns = 0; ns < num_slots; ns++) {
         for (size_t l = 0; l < num_symbols; l++) {
@@ -52,7 +51,7 @@ void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vect
     }
 
     double multiplier = (1 / sqrt(2.0));
-    multiplier = 1; // Для наглядности
+    if (amp_pilots_high) {multiplier = 1;}
 
     for (size_t ns = 0; ns < num_slots; ns++) {
         for (size_t l = 0; l < num_symbols; l++) {
@@ -68,7 +67,7 @@ void gen_pilots_siq(const std::vector<int>& pilot_indices, std::vector<std::vect
     // for (size_t ns = 0; ns < num_slots; ns++) {
     //     for (size_t l = 0; l < num_symbols; l++) {
     //         std::cout << "refs[" << ns << "][" << l << "]: ";
-    //         for (size_t i = 0; i < num_pilots; i++) {
+    //         for (size_t i = 0; i < num_pilots*2; i++) {
     //             std::cout << c[ns][l][i] << " ";
     //         }
     //         std::cout << std::endl;
