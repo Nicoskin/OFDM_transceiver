@@ -18,14 +18,16 @@ template void cool_plot<double>(const std::vector<double>&, std::string, std::st
 // Первая версия функции: для одного вектора комплексных чисел
 void cool_plot(const std::vector<cd>& data, std::string title, std::string vid, bool show_plot) {
 
-    std::vector<double> real_part, imag_part;
+    std::vector<double> real_part, imag_part, abs_real, abs_imag;
     for (auto symb : data) {
         real_part.push_back(std::real(symb));
         imag_part.push_back(std::imag(symb));
+        abs_real.push_back(std::abs(std::real(symb)));
+        abs_imag.push_back(std::abs(std::imag(symb)));
     }
-
-    double max_real = *std::max_element(real_part.begin(), real_part.end());
-    double max_imag = *std::max_element(imag_part.begin(), imag_part.end());
+    
+    double max_real = *std::max_element(abs_real.begin(), abs_real.end());
+    double max_imag = *std::max_element(abs_imag.begin(), abs_imag.end());
 
     double maximum = std::max(max_real, max_imag);
 
@@ -38,7 +40,7 @@ void cool_plot(const std::vector<cd>& data, std::string title, std::string vid, 
     plt::grid(true);
 
     plt::xlim(-(data.size() * 0.02), data.size() * 1.02);
-    plt::ylim(-(maximum * 1.15), maximum * 1.15);
+    plt::ylim(-(maximum * 1.05), maximum * 1.05);
 
     if (show_plot) {
         plt::show();
