@@ -6,20 +6,22 @@
 void gen_pilots_siq(std::vector<std::vector<std::vector<cd>>>& refs, int N_cell, bool amp_pilots_high) {
     size_t num_slots = 20;
     size_t num_symbols = 7;
-    size_t num_pilots = N_PILOTS;
+    uint16_t N_rb_max = 110;
+    uint16_t N_rb = ((N_FFT - G_SUBCAR - 1) / 12); // 6
+    size_t num_pilots = N_rb * 2;
     
-    // Изменяем размер матрицы c на 20x7x(num_pilots*2)
-    std::vector<std::vector<std::vector<int32_t>>> c(num_slots, std::vector<std::vector<int32_t>>(num_symbols, std::vector<int32_t>(num_pilots*2, 0)));
+    // Изменяем размер матрицы c на 20x7x440
+    std::vector<std::vector<std::vector<int32_t>>> c(num_slots, std::vector<std::vector<int32_t>>(num_symbols, std::vector<int32_t>(N_rb_max*2*2, 0)));
+    std::vector<std::vector<std::vector<cd>>> r(num_slots, std::vector<std::vector<cd>>(num_symbols, std::vector<cd>(N_rb_max*2, 0)));
 
-    uint16_t N_cp = !CP_LEN; // 1 - normal CP, 0 - extended CP 
-    uint16_t N_rb = num_pilots / 2;
+    uint16_t N_cp = !CP_LEN; // 1-normal CP, 0-extended CP 
 
     for (size_t ns = 0; ns < num_slots; ns++) {
         for (size_t l = 0; l < num_symbols; l++) {
             int c_init = 1024 * (7 * (ns + 1) + l + 1) * (2 * N_cell + 1) + 2 * N_cell + N_cp;
 
             int N_c = 1600;
-            int Mpn = 2 * (2 * N_rb);
+            int Mpn = 2 * 2 * N_rb_max;
 
             std::vector<int8_t> x_1(N_c + Mpn + 31, 0);
             x_1[0] = 1;
@@ -36,7 +38,7 @@ void gen_pilots_siq(std::vector<std::vector<std::vector<cd>>>& refs, int N_cell,
             }
 
             // Заполнение c[ns][l][i] значениями
-            for (size_t i = 0; i < num_pilots * 2; i++) {
+            for (size_t i = 0; i < N_rb_max * 2 * 2; i++) { // 440
                 c[ns][l][i] = (x_1[i + N_c] + x_2[i + N_c]) % 2;
             }
 
@@ -53,12 +55,14 @@ void gen_pilots_siq(std::vector<std::vector<std::vector<cd>>>& refs, int N_cell,
     double multiplier = (1 / sqrt(2.0));
     if (amp_pilots_high) {multiplier = 1;}
 
+    int mp;
     for (size_t ns = 0; ns < num_slots; ns++) {
         for (size_t l = 0; l < num_symbols; l++) {
-            for (size_t i = 0; i < num_pilots; i++) {
-                refs[ns][l][i] = cd(
-                    multiplier * (1 - 2 * c[ns][l][2 * i]),
-                    multiplier * (1 - 2 * c[ns][l][2 * i + 1]));
+            for (size_t m = 0; m < N_rb*2; m++) { // 12
+                mp = m + N_rb_max - N_rb;
+                refs[ns][l][m] = {
+                    multiplier * (1 - 2 * c[ns][l][2 * mp + 0]),
+                    multiplier * (1 - 2 * c[ns][l][2 * mp + 1])};
             }
         }
     }
