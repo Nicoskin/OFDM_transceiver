@@ -67,13 +67,13 @@ std::vector<cd> pad_zeros(const std::vector<cd>& signal,  size_t num_zeros_front
 }
 
 /* Добавление многолучевого распространения
- * h = {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}} */
-std::vector<cd> add_Channel(const std::vector<cd>& signal, const std::vector<cd>& h) {
-    std::vector<cd> output(signal.size() + h.size() - 1, cd(0.0, 0.0));
+ * h = {1.0, 0.6, 0.4} - пример коэффициентов канала */
+std::vector<cd> add_Channel(const std::vector<cd>& signal, const std::vector<double>& h) {
+    std::vector<cd> output(signal.size(), cd(0.0, 0.0));
 
     for (size_t i = 0; i < signal.size(); ++i) {
-        for (size_t j = 0; j < h.size(); ++j) {
-            output[i + j] += signal[i] * h[j];
+        for (size_t j = 0; j < h.size() && j <= i; ++j) {
+            output[i] += signal[i - j] * h[j];
         }
     }
 

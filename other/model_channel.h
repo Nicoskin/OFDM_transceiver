@@ -12,4 +12,4 @@ std::vector<cd> add_CFO(std::vector<cd>& signal, double CFO = 1500, uint32_t F_s
 
 std::vector<std::complex<double>> pad_zeros(const std::vector<std::complex<double>>& signal,  size_t num_zeros_front, size_t num_zeros_back);
 
-std::vector<cd> add_Channel(const std::vector<cd>& signal, const std::vector<cd>& h);
+std::vector<cd> add_Channel(const std::vector<cd>& signal, const std::vector<double>& h);

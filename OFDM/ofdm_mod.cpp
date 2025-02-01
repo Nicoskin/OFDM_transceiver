@@ -76,7 +76,7 @@ std::vector<cd> OFDM_mod::addCyclicPrefix(const std::vector<cd>& time_domain_sym
     return cp;
 }
 
-void OFDM_Data::generateIndices() {
+void OFDM_Data_S::generateIndices(int PCI) {
     data_indices.clear();
     data_indices_noPilots.clear();
     data_indices_shifted.clear();
@@ -87,7 +87,7 @@ void OFDM_Data::generateIndices() {
     int middle_subcarrier = N_FFT / 2;
     int total_active = (N_active_subcarriers + N_PILOTS + 1);
     int pilot_interval = total_active / (N_PILOTS - 1);
-    int shift = 0;
+    int shift = PCI;
     shift = shift % 6;
 
     // Проходим по всем поднесущим без защитной полосы

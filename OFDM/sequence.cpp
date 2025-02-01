@@ -34,14 +34,20 @@ void gen_pilots_siq(std::vector<std::vector<std::vector<cd>>>& refs, int N_cell,
                 x_2[i] = (c_init >> i) & 1;
             }
             for (int n = 0; n < N_c + Mpn; n++) {
-                x_2[n + 31] = (x_2[n + 3] + x_2[n + 2] + x_2[n + 1] + x_2[n]) % 2;
+                x_2[n + 31] = (x_2[n + 3] + x_2[n + 2] + x_2[n + 1] + x_2[n]) % 2;  
             }
 
             // Заполнение c[ns][l][i] значениями
             for (size_t i = 0; i < N_rb_max * 2 * 2; i++) { // 440
                 c[ns][l][i] = (x_1[i + N_c] + x_2[i + N_c]) % 2;
             }
-
+            // if ((ns == 0) && (l == 0)) {
+            //     std::cout << "c_init = " << c_init << "   cell.id = " << N_cell << std::endl;
+            //     for (size_t i = 208; i < 232; i++) {
+            //         std::cout << c[ns][l][i] << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
             // std::cout << "ns = " << ns << "   l = " << l << std::endl;
             // std::cout << "c_init = " << c_init << "   cell.id = " << N_cell << std::endl;
             // for (size_t i = 0; i < num_pilots * 2; i++) {
@@ -60,6 +66,7 @@ void gen_pilots_siq(std::vector<std::vector<std::vector<cd>>>& refs, int N_cell,
         for (size_t l = 0; l < num_symbols; l++) {
             for (size_t m = 0; m < N_rb*2; m++) { // 12
                 mp = m + N_rb_max - N_rb;
+                //std::cout << "mp: " << mp << std::endl;
                 refs[ns][l][m] = {
                     multiplier * (1 - 2 * c[ns][l][2 * mp + 0]),
                     multiplier * (1 - 2 * c[ns][l][2 * mp + 1])};

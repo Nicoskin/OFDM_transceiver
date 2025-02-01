@@ -4,22 +4,24 @@
 #include <complex>
 #include <string>
 
-#include "../../QAM/qam_mod.h"
-#include "../../QAM/qam_demod.h"
-#include "../../Segmenter/segmenter.h"
-#include "../../OFDM/ofdm_mod.h"
-#include "../../OFDM/ofdm_demod.h"
-#include "../../OFDM/sequence.h"
-#include "../../OFDM/fft/fft.h"
-#include "../../File_converter/file_converter.h"
-#include "../../OFDM/freq_offset.hpp"
-#include "../../other/model_channel.h"
-#include "../../other/plots.h"
+// #include "../../QAM/qam_mod.h"
+// #include "../../QAM/qam_demod.h"
+// #include "../../Segmenter/segmenter.h"
+// #include "../../OFDM/ofdm_mod.h"
+// #include "../../OFDM/ofdm_demod.h"
+// #include "../../OFDM/sequence.h"
+// #include "../../OFDM/fft/fft.h"
+// #include "../../File_converter/file_converter.h"
+// #include "../../OFDM/freq_offset.hpp"
+// #include "../../other/model_channel.h"
+// #include "../../other/plots.h"
+
+#include "func_for_real_lte.h"
 
 
 
 
-// g++ test.cpp -I/usr/include/python3.10 -lpython3.10 -fopenmp ../../other/plots.cpp ../../other/model_channel.cpp ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -o test && ./test
+// g++ test.cpp -I/usr/include/python3.10 -lpython3.10 -fopenmp func_for_real_lte.cpp ../../other/plots.cpp ../../other/model_channel.cpp ../../File_converter/file_converter.cpp  ../../QAM/qam_mod.cpp ../../QAM/qam_demod.cpp ../../Segmenter/segmenter.cpp ../../OFDM/ofdm_mod.cpp ../../OFDM/ofdm_demod.cpp ../../OFDM/fft/fft.cpp ../../OFDM/sequence.cpp ../../OFDM/freq_offset.cpp -o test && ./test
 
 
 using cd = std::complex<double>;
@@ -67,39 +69,6 @@ void saveCorr(const std::vector<double>& corr, const std::string& filename) {
     }
 }
 
-std::vector<std::complex<double>> readComplexNumbersFromFile(const std::string& filename) {
-    std::vector<std::complex<double>> result;
-    std::ifstream file(filename);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("Unable to open file: " + filename);
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        // Remove unwanted characters
-        line.erase(remove(line.begin(), line.end(), '('), line.end());
-        line.erase(remove(line.begin(), line.end(), ')'), line.end());
-
-        std::istringstream iss(line);
-        double real, imag;
-        char plus_or_minus, i;
-
-        // Parse the real and imaginary parts
-        if (iss >> real >> plus_or_minus >> imag >> i && (plus_or_minus == '+' || plus_or_minus == '-')) {
-            if (plus_or_minus == '-') {
-                imag = -imag;
-            }
-            result.emplace_back(real, imag);
-        } else {
-            throw std::runtime_error("Invalid format in file");
-        }
-    }
-
-    file.close();
-    return result;
-}
-
 std::vector<double> corr_cp_extended(const std::vector<cd>& slot_signal) {
     std::vector<double> corr(slot_signal.size(), 0.0);
     int CP_len = 9;
@@ -132,63 +101,64 @@ void smeared(const std::vector<cd>& signal, int first_ind_pss) {
 }
 
 int main() { 
-    std::vector<cd> complexVector = readComplexNumbersFromFile("rx_ue_3sdr_pci31.txt");
+    std::vector<cd> complexVector = readComplexNumsFromFile("rx_ue_3sdr_pci31.txt");
+
     OFDM_mod ofdm_mod;
     OFDM_demod ofdm_demod;
-    spectrogram_plot(complexVector, "Received signal");
-
-    if (complexVector.size() < 19200) {
-        std::cerr << "Слишком мало данных для обработки." << std::endl;
+    complexVector = std::vector<cd>(complexVector.begin() + 20000, complexVector.end());
+    auto vec = calculate_pci(complexVector);
+    int pci = vec[0];
+    int index_first_pss = vec[1];
+    if (pci < 0) {
+        std::cerr << "PCI не найден." << std::endl;
         return -1;
     }
-    std::vector<cd> one_frame(complexVector.begin(), complexVector.begin() + 19200);
+    std::cout << "PCI: " << pci;
+    std::cout << "  Index first PSS: " << index_first_pss << std::endl;
 
-    std::vector<int> indices_pss;
-    int pss_root = 0;
-    for(size_t root = 0; root < 3; root++) {
-        auto pss = ofdm_mod.mapPSS(root);
-        auto corr = ofdm_demod.correlation(one_frame, pss);
-        for (size_t i = 0; i < corr.size(); ++i) {
-            if (corr[i] > 0.8) {
-                indices_pss.push_back(i);
-            }
-        }
-        if (indices_pss.size() == 2) {
-            pss_root = root;
-            std::cout << "PSS: " << pss_root << std::endl;
-            std::cout << "Indices: " << indices_pss[0] << " " << indices_pss[1] << std::endl;
-            //cool_plot(corr, "Correlation with PSS", "-");
-            break;
-        }
+    // Убираем CP
+    std::vector<cd> time_pbch_no_cp = time_pbch_without_cp(complexVector, index_first_pss);
+
+    // Гунерируем пилоты
+    std::vector<std::vector<std::vector<cd>>> refs;
+    refs.resize(20, std::vector<std::vector<cd>>(7, std::vector<cd>(6 * 2, cd(0, 0))));
+    gen_pilots_siq(refs, pci, false);
+
+    // Переходим в частотную область
+    std::vector<cd> freq_pbch;
+    for(size_t i = 0; i < 5; i++){
+        auto fft_res = fft(std::vector<cd>(time_pbch_no_cp.begin() + N_FFT*i, time_pbch_no_cp.begin() + N_FFT*(i+1)));
+        fft_res = fftshift(fft_res);
+        freq_pbch.insert(freq_pbch.end(), fft_res.begin(), fft_res.end());
     }
-    // Частотная по PSS
-    std::vector<cd> signal_cfo;
-    frequency_correlation(ofdm_mod.mapPSS(pss_root), one_frame, 15000, signal_cfo, 1920000);
-    one_frame = signal_cfo;
 
-    int sss_root = -1;
-    int index_first_pss = 0;
-    auto sss_fft = fft(std::vector<cd>(one_frame.begin() + indices_pss[0] - 137, one_frame.begin() + indices_pss[0] - 9));
-    sss_fft = fftshift(sss_fft);
+    auto inter_H_0 = interpolated_channel_estimator(std::vector<cd>(freq_pbch.begin()        , freq_pbch.begin()+N_FFT  ), 1, 0, refs, true);
+    auto inter_H_4 = interpolated_channel_estimator(std::vector<cd>(freq_pbch.begin()+N_FFT*4, freq_pbch.begin()+N_FFT*5), 1, 4, refs, false);
+    auto inter_H_1_3 = interpolating_H_0to4_symb(inter_H_0, inter_H_4);
+        // cool_plot(inter_H_0, "Interpolated H 0");
+        // cool_plot(std::vector<cd>(freq_pbch.begin(),     freq_pbch.begin()+N_FFT), "H 0", "-o");
+        // cool_plot(inter_H_4, "Interpolated H 4");
+        // cool_plot(std::vector<cd>(freq_pbch.begin()+512, freq_pbch.begin()+640), "H 4", "-o");
+        // cool_plot(inter_H_1_3, "Interpolated H 1-3");
 
-    for(size_t subframe = 0; subframe <= 5; subframe += 5){
-        for(size_t sss = 0; sss < 168; sss++) {
-            auto sss_freq = generate_sss(sss*3 + pss_root, subframe, true);
-            auto corr = ofdm_demod.correlation(sss_fft, sss_freq);
-            if (*std::max_element(corr.begin(), corr.end()) > 0.9) {
-                sss_root = sss;
-                std::cout << "SSS: " << sss << std::endl;
-                //cool_plot(corr, "Correlation with SSS", "-");
-                break;
-            }
+    // Делим на оценку канала
+    std::vector<cd> pbch_symb_divide_CH(N_FFT*4, 0);
+    for (int k_s = 0; k_s < N_FFT*4; k_s++) { 
+        if (k_s < N_FFT) {
+            if (std::real(inter_H_0[k_s]) == 0) pbch_symb_divide_CH[k_s] = 0;
+            else pbch_symb_divide_CH[k_s] = freq_pbch[k_s] / inter_H_0[k_s]; 
         }
-        if((sss_root != -1) && (subframe == 0)) {
-            index_first_pss = indices_pss[0];
-            break;
+        else {
+            if (std::real(inter_H_1_3[k_s - N_FFT]) == 0) pbch_symb_divide_CH[k_s] = 0;
+            else pbch_symb_divide_CH[k_s] = freq_pbch[k_s] / inter_H_1_3[k_s - N_FFT]; 
         }
-        else index_first_pss = indices_pss[1];
+        //pbch_symb_divide_CH[k_s] = freq_pbch[k_s];
     }
-    std::cout << "Index first PSS: " << index_first_pss << std::endl;
+
+    cool_plot(pbch_symb_divide_CH, "pbch_symb", "-o");
+    //std::cout << "pbch_symb_divide_CH: " << pbch_symb_divide_CH[356] << pbch_symb_divide_CH[484] << std::endl;
+
+
     show_plot();
 
     return 0;

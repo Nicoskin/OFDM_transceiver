@@ -11,7 +11,7 @@ namespace {
     using cd = std::complex<double>;
 }
 
-OFDM_demod::OFDM_demod(){
+OFDM_demod::OFDM_demod(bool amplitude_pilots_high) : amplitude_pilots_high(amplitude_pilots_high){
     if (CP_LEN == 0) CP_len = N_FFT / 12.8 * 0.9;
     else CP_len = N_FFT / 4;
 };
@@ -19,7 +19,7 @@ OFDM_demod::OFDM_demod(){
 std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     std::vector<cd> demod_signal;
     OFDM_mod ofdm_mod;
-    const OFDM_Data data;
+    const OFDM_Data_S data = OFDM_Data_S(amplitude_pilots_high);
     auto pss = ofdm_mod.mapPSS();
     auto corr_pss = correlation(signal, pss);
     auto indexs_pss = find_ind_pss(corr_pss, 0.87); // threshold - регулируемый порог
@@ -52,7 +52,7 @@ std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
 }
 
 // Извлекает и демодулирует каждый слот
-std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const OFDM_Data &data) {
+std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t n_slot, const std::vector<int>& indexs_pss, const OFDM_Data_S &data) {
     auto one_slot = extract_slots(signal, indexs_pss, n_slot);
     auto corr_cp_arr = corr_cp(one_slot);
     auto indexs_cp = find_ind_cp(corr_cp_arr);
@@ -66,6 +66,7 @@ std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t
         auto one_symb_freq = fft(one_symb);
         one_symb_freq = fftshift(one_symb_freq);
         auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb, data);
+        cool_plot(inter_H, "Interpolated H");
 
         // Деление на оценку канала
         one_symb_freq = divideByChannel(one_symb_freq, inter_H);
@@ -85,6 +86,10 @@ std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t
 std::vector<cd> OFDM_demod::divideByChannel(const std::vector<cd>& one_symb_freq, const std::vector<cd>& inter_H) {
     std::vector<cd> result = one_symb_freq;
     for (int k_s = 0; k_s < N_FFT; ++k_s) {
+        // if (inter_H[k_s] == cd(0, 0)) {
+        //     result[k_s] = 0;
+        //     continue;
+        // }
         result[k_s] = one_symb_freq[k_s] / inter_H[k_s];
     }
     return result;
@@ -313,7 +318,7 @@ std::vector<int> OFDM_demod::find_ind_cp(const std::vector<double>& corr_cp) {
 }
 
 
-std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb, const OFDM_Data &data) {
+std::vector<cd> OFDM_demod::interpolated_H(const std::vector<cd>& signal, int n_slot, int n_symb, const OFDM_Data_S &data) {
     std::vector<cd> H_channel(N_PILOTS);
     std::vector<cd> interpolated_signal(N_FFT);
 
