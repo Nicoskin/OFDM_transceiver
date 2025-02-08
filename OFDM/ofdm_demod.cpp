@@ -19,11 +19,12 @@ OFDM_demod::OFDM_demod(bool amplitude_pilots_high) : amplitude_pilots_high(ampli
 std::vector<cd> OFDM_demod::demodulate(const std::vector<cd>& signal) {
     std::vector<cd> demod_signal;
     OFDM_mod ofdm_mod;
-    const OFDM_Data_S data = OFDM_Data_S(amplitude_pilots_high);
+    const OFDM_Data_S data = OFDM_Data_S(N_CELL_ID, amplitude_pilots_high);
     auto pss = ofdm_mod.mapPSS();
     auto corr_pss = correlation(signal, pss);
     auto indexs_pss = find_ind_pss(corr_pss, 0.87); // threshold - регулируемый порог
     sinr(signal, indexs_pss[0]);
+    if (indexs_pss.back() > signal.size() - (N_FFT+CP_len)*6) indexs_pss.pop_back(); // Удаляем последний слот, если он не полный
 
     // Результирующий вектор для данных всех слотов
     std::vector<std::vector<cd>> demod_slot_results(indexs_pss.size());
@@ -66,7 +67,7 @@ std::vector<cd> OFDM_demod::demodulateSlot(const std::vector<cd>& signal, size_t
         auto one_symb_freq = fft(one_symb);
         one_symb_freq = fftshift(one_symb_freq);
         auto inter_H = interpolated_H(one_symb_freq, n_slot, n_symb, data);
-        cool_plot(inter_H, "Interpolated H");
+        //cool_plot(inter_H, "Interpolated H");
 
         // Деление на оценку канала
         one_symb_freq = divideByChannel(one_symb_freq, inter_H);

@@ -74,7 +74,7 @@ std::vector<double> corr_cp_extended(const std::vector<cd>& slot_signal) {
 std::vector<cd> transmission(){
     std::cout << "-----TX-----" << std::endl;
 
-    auto bits = generateRandBits(680*1, 2);
+    auto bits = generateRandBits(680*2, 1);
     // auto bits = string2bits("Hello, World! Привет, Мир! 1234567890");
     //auto bits = file2bits("test_file_in/арбуз арбуз.jpeg");
     
@@ -86,7 +86,7 @@ std::vector<cd> transmission(){
     QAM_mod qam_mod;
     auto qpsk_mod = qam_mod.modulate(segments);
 
-    OFDM_mod ofdm_mod;
+    OFDM_mod ofdm_mod = OFDM_mod(false);
     auto ofdm_data = ofdm_mod.modulate(qpsk_mod);
 
     return ofdm_data;
@@ -96,7 +96,7 @@ std::vector<cd> add_ch(std::vector<cd>& tx_signal) {
     double SNR_dB = 20.0;
     auto signal = pad_zeros(tx_signal, 1020, 1000);
     signal = add_CFO(signal, 2000);
-    //signal = add_Channel(signal, {{1.0, 0.0}, {0.6, 0.1}, {0.4, -0.3}});
+    signal = add_Channel(signal, {1.0, 0.4});
     auto noise_signal = add_noise(signal, SNR_dB, 1);
 
     return noise_signal;
@@ -110,7 +110,7 @@ std::vector<std::vector<uint8_t>> receive(std::vector<cd>& noise_signal) {
     std::vector<std::complex<double>> noise_signal_cfo;
     frequency_correlation(ofdm_mod.mapPSS(), noise_signal, 15000, noise_signal_cfo, 1920000);
 
-    OFDM_demod ofdm_demod;
+    OFDM_demod ofdm_demod = OFDM_demod(false);
     auto demod_signal = ofdm_demod.demodulate(noise_signal_cfo);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -122,6 +122,15 @@ std::vector<std::vector<uint8_t>> receive(std::vector<cd>& noise_signal) {
     Segmenter segmenter;
     auto demod_bits_m = segmenter.reshape(demod_bits);
     demod_bits_m = segmenter.scramble(demod_bits_m);
+
+    auto err_slots = segmenter.checkCRC(demod_bits_m);
+    if (!err_slots.empty()) {
+        std::cout << "Incorrect segments: ";
+        for (auto err : err_slots) {
+            std::cout << err << " ";
+        }
+        std::cout << std::endl;
+    }
 
     // auto data = segmenter.extract_data(demod_bits_m);
     // auto flag = segmenter.extract_flag(demod_bits_m);
@@ -178,6 +187,7 @@ int main() {
     
     auto ofdm_data = transmission();
     auto noise_signal = add_ch(ofdm_data);
+    noise_signal = std::vector(noise_signal.begin(), noise_signal.begin()+2600);
     auto demod_bits_m = receive(noise_signal);
 
     Segmenter segmenter;

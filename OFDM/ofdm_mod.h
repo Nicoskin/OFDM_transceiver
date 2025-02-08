@@ -11,7 +11,8 @@
 
 using cd = std::complex<double>;
 
-// Структура для хранения всех индексов и ссылок
+// Структура для хранения всех индексов и RS
+// int PCI = N_CELL_ID, bool amp_pilots_high = false
 struct OFDM_Data_S {
     std::vector<int> data_indices;
     std::vector<int> data_indices_noPilots;
@@ -48,7 +49,7 @@ public:
 private:
     int CP_len;
     bool amplitude_pilots_high;
-    OFDM_Data_S data = OFDM_Data_S(amplitude_pilots_high); 
+    OFDM_Data_S data = OFDM_Data_S(N_CELL_ID, amplitude_pilots_high); 
 
     std::vector<cd> mapData(const std::vector<cd> &input);
     std::vector<cd> mapPilots(std::vector<cd> &input, uint16_t num_slot, uint16_t num_symbol);
