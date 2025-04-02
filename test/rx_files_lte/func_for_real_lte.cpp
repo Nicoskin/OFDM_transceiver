@@ -234,3 +234,154 @@ std::vector<cd> time_pbch_without_cp(std::vector<cd> complexVector, int index_fi
     return time_pbch_without_cp;
 }
 
+std::vector<cd> preparing_pbch(std::vector<cd> complexVector, std::vector<int> vec_pci) {
+    int pci = vec_pci[0];
+    int index_first_pss = vec_pci[1];
+
+    std::cout << "PCI: " << pci;
+    std::cout << "  Index first PSS: " << index_first_pss << std::endl;
+
+    // Убираем CP
+    std::vector<cd> time_pbch_no_cp = time_pbch_without_cp(complexVector, index_first_pss);
+
+    // Гунерируем пилоты
+    std::vector<std::vector<std::vector<cd>>> refs;
+    refs.resize(20, std::vector<std::vector<cd>>(7, std::vector<cd>(6 * 2, cd(0, 0))));
+    gen_pilots_siq(refs, pci, false);
+
+    // Переходим в частотную область
+    std::vector<cd> freq_pbch;
+    for(size_t i = 0; i < 5; i++){
+        auto fft_res = fft(std::vector<cd>(time_pbch_no_cp.begin() + N_FFT*i, time_pbch_no_cp.begin() + N_FFT*(i+1)));
+        fft_res = fftshift(fft_res);
+        freq_pbch.insert(freq_pbch.end(), fft_res.begin(), fft_res.end());
+    }
+
+    auto inter_H_0 = interpolated_channel_estimator(std::vector<cd>(freq_pbch.begin()        , freq_pbch.begin()+N_FFT  ), 1, 0, refs, true);
+    auto inter_H_4 = interpolated_channel_estimator(std::vector<cd>(freq_pbch.begin()+N_FFT*4, freq_pbch.begin()+N_FFT*5), 1, 4, refs, false);
+    auto inter_H_1_3 = interpolating_H_0to4_symb(inter_H_0, inter_H_4);
+
+    // Делим на оценку канала
+    std::vector<cd> pbch_symb_divide_CH(N_FFT*4, 0);
+    for (int k_s = 0; k_s < N_FFT*4; k_s++) { 
+        if (k_s < N_FFT) {
+            if (std::real(inter_H_0[k_s]) == 0) pbch_symb_divide_CH[k_s] = 0;
+            else pbch_symb_divide_CH[k_s] = freq_pbch[k_s] / inter_H_0[k_s]; 
+        }
+        else {
+            if (std::real(inter_H_1_3[k_s - N_FFT]) == 0) pbch_symb_divide_CH[k_s] = 0;
+            else pbch_symb_divide_CH[k_s] = freq_pbch[k_s] / inter_H_1_3[k_s - N_FFT]; 
+        }
+        //pbch_symb_divide_CH[k_s] = freq_pbch[k_s];
+    }
+
+    auto data = OFDM_Data_S(pci); 
+    std::vector<cd> pbch_no_zeros;
+    for(size_t symbol = 0; symbol < 4; symbol++){
+        if (symbol <= 1){
+            for(auto ind : data.pbch_indices){
+                pbch_no_zeros.push_back(pbch_symb_divide_CH[symbol*N_FFT + ind]);
+            }
+        }
+        else{
+            for(auto ind : data.data_indices_noPilots){
+                pbch_no_zeros.push_back(pbch_symb_divide_CH[symbol*N_FFT + ind]);
+            }
+        }
+    }
+
+    return pbch_no_zeros;
+}
+
+std::vector<uint8_t> pbch_decode(std::vector<cd> freq_pbch_no_zeros, int pci) {
+    QAM_demod qam_demod(2);
+    auto pbch_bits = qam_demod.demodulate(freq_pbch_no_zeros);
+
+    std::vector<uint8_t> scrambled_bits = scrambling(pbch_bits, pci, 0);
+
+    auto de_rate_matched_bits = de_rate_match(scrambled_bits, 120);
+
+    auto decoded = decode(de_rate_matched_bits);
+
+    auto crc = check_crc(decoded);
+
+    if (crc != 1) 
+        return {};
+    else 
+        return decoded;
+}
+
+void pbch_mib_unpack(std::vector<uint8_t> pbch_mib_and_crc) {
+    std::cout << "MIB: " << std::endl;
+    // bandwidth
+    int bandwidth = pbch_mib_and_crc[0]*4 + pbch_mib_and_crc[1]*2 + pbch_mib_and_crc[2];
+    std::cout << "  bandwidth: " ;
+    switch (bandwidth)
+    {
+    case 0:
+        std::cout << "n6" << std::endl;
+        break;
+    case 1:
+        std::cout << "n15" << std::endl;
+        break;
+    case 2:
+        std::cout << "n25" << std::endl;
+        break;
+    case 3:
+        std::cout << "n50" << std::endl;
+        break;
+    case 4:
+        std::cout << "n75" << std::endl;
+        break;
+    case 5:
+        std::cout << "n100" << std::endl;
+        break;
+
+    default:
+        break;
+    }
+
+    // phich_conf
+    std::cout << "  PHICH Config: " << std::endl;
+    int phich_conf =  pbch_mib_and_crc[3]*4 + pbch_mib_and_crc[4]*2 + pbch_mib_and_crc[5];
+    if ((phich_conf<<2) == 0)
+        std::cout << "      PHICH-Duration: "<< "normal" << std::endl;
+    else
+        std::cout << "      PHICH-Duration: "<< "extended" << std::endl;
+
+    if ((phich_conf<<1) == 0)
+        std::cout << "      PHICH-Resource: "<< "1" << std::endl;
+    else if ((phich_conf<<1) == 1)
+        std::cout << "      PHICH-Resource: "<< "1/2" << std::endl;
+    else if ((phich_conf<<1) == 2)
+        std::cout << "      PHICH-Resource: "<< "1/6" << std::endl;
+    else
+        std::cout << "      PHICH-Resource: "<< "2" << std::endl;
+
+    // System Frame Number
+    std::cout << "  System Frame Number: ";
+    int system_frame_number = 0;
+    for (int i = 0; i < 8; i++){
+        system_frame_number += pbch_mib_and_crc[i+6]*pow(2,9-i);
+    }
+    std::cout << system_frame_number << " | " ;
+    for (int i = 0; i < 8; i++){
+        std::cout << (int)pbch_mib_and_crc[i+6];
+    }
+    std::cout << std::endl;
+
+    // Reserved bits
+    std::cout << "  Reserved bits: ";
+    int reserved_bits = 0;
+    for (int i = 0; i < 10; i++){
+        reserved_bits += pbch_mib_and_crc[i+14]*pow(2,11-i);
+    }
+    for (int i = 0; i < 10; i++){
+        std::cout << (int)pbch_mib_and_crc[i+14];
+    }
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+}
+
+

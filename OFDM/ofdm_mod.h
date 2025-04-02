@@ -17,6 +17,8 @@ struct OFDM_Data_S {
     std::vector<int> data_indices;
     std::vector<int> data_indices_noPilots;
     std::vector<int> data_indices_shifted;
+    std::vector<int> pbch_indices;
+
     std::vector<int> pilot_indices;
     std::vector<int> pilot_indices_shifted;
 

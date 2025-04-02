@@ -15,6 +15,7 @@
 #include "../../OFDM/freq_offset.hpp"
 #include "../../other/model_channel.h"
 #include "../../other/plots.h"
+#include "pbch.h"
 
 using cd = std::complex<double>;
 
@@ -23,3 +24,6 @@ std::vector<int> calculate_pci(std::vector<cd>& complexVector);
 std::vector<cd> interpolated_channel_estimator(const std::vector<cd> signal, int n_slot, int n_symb, std::vector<std::vector<std::vector<cd>>> refs, bool zero_sym);
 std::vector<cd> interpolating_H_0to4_symb(std::vector<cd> H_0, std::vector<cd> H_4);
 std::vector<cd> time_pbch_without_cp(std::vector<cd> complexVector, int index_first_pss);
+std::vector<cd> preparing_pbch(std::vector<cd> complexVector, std::vector<int> vec_pci);
+std::vector<uint8_t> pbch_decode(std::vector<cd> freq_pbch_no_zeros, int pci);
+void pbch_mib_unpack(std::vector<uint8_t> pbch_mib_and_crc);

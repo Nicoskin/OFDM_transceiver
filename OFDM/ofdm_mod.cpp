@@ -80,6 +80,7 @@ void OFDM_Data_S::generateIndices(int PCI) {
     data_indices.clear();
     data_indices_noPilots.clear();
     data_indices_shifted.clear();
+    pbch_indices.clear();
     pilot_indices.clear();
     pilot_indices_shifted.clear();
 
@@ -101,6 +102,17 @@ void OFDM_Data_S::generateIndices(int PCI) {
 
         data_indices_noPilots.push_back(current_subcarrier);
 
+        int shifted_position = (current_subcarrier + (shift % 3)) % 3;
+        if ((current_subcarrier < middle_subcarrier) && 
+            (shifted_position != 0)){
+            pbch_indices.push_back(current_subcarrier);
+        }
+        else if ((current_subcarrier > middle_subcarrier) &&
+                 (shifted_position != 1)){
+            pbch_indices.push_back(current_subcarrier);
+        }
+
+        // Handle pilots in the second half
         if ((i > (total_active - 1) / 2) && 
             (i % pilot_interval == (shift + 1) % 6) && 
             pilot_indices.size() < N_PILOTS) {
